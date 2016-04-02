@@ -1,11 +1,11 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'business_rule_documentation/version'
+require 'markdown_ruby_documentation/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "business_rule_documentation"
-  spec.version       = BusinessRuleDocumentation::VERSION
+  spec.name          = "markdown_ruby_documentation"
+  spec.version       = MarkdownRubyDocumentation::VERSION
   spec.authors       = ["Dustin Zeisler"]
   spec.email         = ["dustin@zeisler.net"]
 
@@ -21,6 +21,8 @@ Gem::Specification.new do |spec|
   else
     raise "RubyGems 2.0 or newer is required to protect against public gem pushes."
   end
+
+  spec.required_ruby_version = ">= 2.1"
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   spec.bindir        = "exe"

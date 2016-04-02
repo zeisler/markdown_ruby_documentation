@@ -2,7 +2,7 @@
 
 Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/business_rule_documentation`. To experiment with that code, run `bin/console` for an interactive prompt.
 
-TODO: Delete this and the text above, and describe your gem
+Gem provides the ability to use markdown and ruby ERB with some helper methods inside of comments. The comment area then can be generated into a html page.
 
 ## Installation
 
@@ -22,7 +22,58 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+```ruby
+class RubyClassToBeInspected
+  #=mark_doc
+  # **I am Documentation**
+  # <%= print_method_source "#i_am_a_documented_method" %>
+  #=mark_end
+  def i_am_a_documented_method
+    "Hello"
+  end
+end
+
+BusinessRuleDocumentation::Generate.new(
+  subject:      RubyClassToBeInspected, 
+  project_root: <The path to the root of your git project>, 
+  github_link:  <The GitHub base link to your project>,
+  out_dir:      <The out putted directory for the created markdown file>).call
+```
+
+### Resulting file
+
+```markdown
+# Ruby Class To Be Inspected
+
+## I am a documented method
+
+**I am Documentation**
+"Hello"
+
+```
+
+### ERB Methods
+
+#### `print_method_source`
+The source of a method block returned as text.
+
+#### `eval_method`
+The result of evaluating a method.
+
+#### `print_mark_doc_from`
+Prints out the mark doc from another method.
+
+#### `print_raw_comment`
+Prints out any comments proceeding a method def.
+
+##### Example inputs
+
+* ".class_method_name" class method in the current scope.
+* "Constant.class_method_name" class method on a specific constant.
+* "SomeClass#instance_method_name" an instance method on a specific constant.
+* "#instance_method_name" an instance method in the current scope.
+
+Instance method that call other methods will results in an error.
 
 ## Development
 
