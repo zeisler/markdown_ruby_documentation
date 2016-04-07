@@ -51,12 +51,9 @@ RSpec.describe MarkdownRubyDocumentation::Generate do
   end
 
   it "saves a markdown file with generated docs" do
-    file     = described_class.new(subject:      DocumentMe,
-                                   project_root: "root",
-                                   github_link:  "https://github.com/",
-                                   file:         Tempfile.new("GenerateMarkdownTest")).call.file
-    markdown = File.open(file.path).read
-    expect(markdown).to eq <<~MD
+    pages     = described_class.run(subjects: [DocumentMe])
+    expect(pages.first.keys).to eq ["DocumentMe"]
+    expect(pages.first.values.first).to eq <<~MD
       # Document Me
 
       ## The Sum Of A And B

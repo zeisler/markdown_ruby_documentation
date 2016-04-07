@@ -3,7 +3,7 @@ module MarkdownRubyDocumentation
 
     attr_reader :subject, :base_url, :root
 
-    def initialize(subject:, base_url:, root:)
+    def initialize(subject:, base_url: GitHubProject.url, root: GitHubProject.root_path)
       @subject  = subject
       @methods  = methods
       @base_url = base_url
