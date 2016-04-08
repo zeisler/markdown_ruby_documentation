@@ -30,9 +30,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_runtime_dependency "method_source", "~> 0.8.2"
-  # spec.add_runtime_dependency "redcarpet", "~> 3.3.4"
-  spec.add_runtime_dependency "github-markup", "~> 1.3.3"
-  spec.add_runtime_dependency "github-markdown", "~> 0.6.9"
   spec.add_runtime_dependency "activesupport", ">= 4.1"
   spec.add_development_dependency "bundler", "~> 1.10"
   spec.add_development_dependency "rake", "~> 10.0"

@@ -132,5 +132,46 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
         expect(result).to eq({ method2: "109\n109\nhello\n" })
       end
     end
+
+    context "link to method source in GitHub" do
+      let!(:ruby_class) {
+        class Test
+
+          #=mark_doc
+          # <%= git_hub_method_url(".def_on_github") %>
+          #=mark_end
+          def method2
+          end
+
+          def self.def_on_github
+            "hello"
+          end
+        end
+      }
+
+      it do
+        result = described_class.new(Test, [:method2]).to_hash
+
+        expect(result).to eq({ method2: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb#L146\n" })
+      end
+    end
+
+    context "when only including mark_doc and no mark_end" do
+      let!(:ruby_class) {
+        class Test
+
+          #=mark_doc
+          #hello
+          def document_me
+          end
+        end
+      }
+
+      it "adds comment at the end and parse the whole comment" do
+        result = described_class.new(Test, [:document_me]).to_hash
+
+        expect(result).to eq({ document_me: "hello\n[//]: # (This method has no mark_end)" })
+      end
+    end
   end
 end

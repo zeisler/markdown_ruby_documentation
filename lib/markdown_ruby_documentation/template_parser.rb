@@ -65,6 +65,11 @@ module MarkdownRubyDocumentation
           .join("\n")
       end
 
+      def git_hub_method_url(input)
+        method = Method.create(input.dup)
+        GitHubLink::Url.new(subject: get_context_class(method), method_object: method)
+      end
+
       private
 
       def parse_erb(str)
@@ -86,8 +91,23 @@ module MarkdownRubyDocumentation
       end
 
       def extract_dsl_comment(comment_string)
+        if (v = when_start_and_end(comment_string))
+          v
+        elsif (x = when_only_start(comment_string))
+          x << "[//]: # (This method has no mark_end)"
+        else
+          ""
+        end
+      end
+
+      def when_start_and_end(comment_string)
         v = /#{START_TOKEN}\n((.|\n)*)#{END_TOKEN}/.match(comment_string)
-        v ? v.captures.first : ""
+        v.try!(:captures).try!(:first)
+      end
+
+      def when_only_start(comment_string)
+        v = /#{START_TOKEN}\n((.|\n)*)/.match(comment_string)
+        v.try!(:captures).try!(:first)
       end
 
       def extract_dsl_comment_from_method(method)
@@ -102,7 +122,7 @@ module MarkdownRubyDocumentation
         if method.context == :ruby_class
           ruby_class
         else
-          Object.const_get(method.context)
+          method.context.to_s.constantize
         end
       end
     end

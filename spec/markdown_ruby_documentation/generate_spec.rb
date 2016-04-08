@@ -1,29 +1,31 @@
 RSpec.describe MarkdownRubyDocumentation::Generate do
-  class DocumentMe
+  module Namespace
+    class DocumentMe
 
-    #=mark_doc
-    # This is an important part of the logic
-    # ```ruby
-    # <%= print_method_source("#a") %> + <%= print_method_source("#b") %>
-    # ```
-    # ```javascript
-    # <%= eval_method("Resource#table").to_json %>
-    # ```
-    #=mark_end
-    def the_sum_of_a_and_b
-      a + b
+      #=mark_doc
+      # This is an important part of the logic
+      # ```ruby
+      # <%= print_method_source("#a") %> + <%= print_method_source("#b") %>
+      # ```
+      # ```javascript
+      # <%= eval_method("Resource#table").to_json %>
+      # ```
+      #=mark_end
+      def the_sum_of_a_and_b
+        a + b
+      end
+
+      private
+
+      def a
+        2
+      end
+
+      def b
+        4
+      end
+
     end
-
-    private
-
-    def a
-      2
-    end
-
-    def b
-      4
-    end
-
   end
 
   class Resource
@@ -51,10 +53,11 @@ RSpec.describe MarkdownRubyDocumentation::Generate do
   end
 
   it "saves a markdown file with generated docs" do
-    pages     = described_class.run(subjects: [DocumentMe])
-    expect(pages.first.keys).to eq ["DocumentMe"]
-    expect(pages.first.values.first).to eq <<~MD
-      # Document Me
+    output = {}
+    described_class.run(subjects:    [Namespace::DocumentMe],
+                                 output_proc: -> (name:, text:) { output.merge!({ name => text }) })
+    expect(output["Namespace::DocumentMe"]).to eq <<~MD
+      # Namespace/Document Me
 
       ## The Sum Of A And B
       This is an important part of the logic
@@ -66,5 +69,10 @@ RSpec.describe MarkdownRubyDocumentation::Generate do
       ```
 
     MD
+  end
+
+  it "structure" do
+    pages = described_class.run(subjects: [Namespace::DocumentMe])
+    expect(pages).to eq({ "Namespace" => { "DocumentMe" => pages["Namespace"]["DocumentMe"] } })
   end
 end

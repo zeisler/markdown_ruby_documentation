@@ -17,7 +17,7 @@ module MarkdownRubyDocumentation
     private
 
     def generate
-      text.scan(/(?<!`)`{1}([\w:_\.#?]*[^`\n])\`/).each do |r|
+      text.scan(/(?<!\^`)`{1}([\w:_\.#?]*[^`\n])\`/).each do |r|
         r = r.first
         if r =~ /(\w*::\w*)+#[\w|\?]+/ # constant with an instance method
           parts = r.split("#")
@@ -29,13 +29,13 @@ module MarkdownRubyDocumentation
         else # a method
           str = "[#{r.titleize}](##{md_id r})"
         end
-        @text = text.gsub("`#{r}`", str)
+        @text = text.gsub("^`#{r}`", str)
       end
       text
     end
 
     def md_id(str)
-      str.downcase.delete("_").delete("-").delete(" ").delete('?')
+      str.downcase.dasherize.delete(" ").delete('?')
     end
   end
 end

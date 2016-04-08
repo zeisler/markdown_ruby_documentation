@@ -29,7 +29,7 @@ class RubyClassToBeInspected
   #=mark_doc
   # **I am Documentation**
   # <%= print_method_source "#i_am_a_documented_method" %>
-  # `MY_VALUE`
+  # ^`MY_VALUE`
   #=mark_end
   def i_am_a_documented_method
     "Hello"
@@ -40,7 +40,7 @@ html_generator  = MarkdownRubyDocumentation::HtmlGenerator.new(
   dir: <Output Directory>
 )
 
-MarkdownRubyDocumentation::Generate.new(
+MarkdownRubyDocumentation::Generate.run(
   subjects:     [RubyClassToBeInspected], 
   output_proc:  html_generator
 ).call
@@ -59,7 +59,24 @@ MarkdownRubyDocumentation::Generate.new(
 
 ```
 
-# Ruby Class To Be Inspected\n## I am a documented method\n\n**I am Documentation**\n"Hello"\n[MY_VALUE](/ruby_class_to_be_inspected#my_value)\n\n### ERB Methods\n\n#### `print_method_source`\nThe source of a method block returned as text.\n\n#### `eval_method`\nThe result of evaluating a method.\n\n#### `print_mark_doc_from`\nPrints out the mark doc from another method.\n\n#### `print_raw_comment`\nPrints out any comments proceeding a method def.\n\n##### Example inputs
+### ERB Methods
+
+#### `print_method_source`
+The source of a method block returned as text.
+
+#### `eval_method`
+The result of evaluating a method.
+
+#### `print_mark_doc_from`
+Prints out the mark doc from another method.
+
+#### `print_raw_comment`
+Prints out any comments proceeding a method def.
+
+#### `git_hub_method_url`
+Creates a url to GitHub based on the current sha or it defaults to master.
+
+##### Example inputs
 
 * ".class_method_name" class method in the current scope.
 * "Constant.class_method_name" class method on a specific constant.

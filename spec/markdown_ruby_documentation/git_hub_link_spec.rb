@@ -11,7 +11,7 @@ RSpec.describe MarkdownRubyDocumentation::GitHubLink do
   it do
     result = described_class.new(subject:  GitHubLinkTest,
                                  root:     "/Users/dzeisler/rf_projects/markdown_ruby_documentation",
-                                 base_url: "https://github.com/zeisler/this_project/")
+                                 base_url: "https://github.com/zeisler/this_project")
                .call({ :test1 => "", :test2 => "" })
     expect(result).to eq({ :test1 => "\n\n[show on github](https://github.com/zeisler/this_project/blob/master/spec/markdown_ruby_documentation/git_hub_link_spec.rb#L4)",
                            :test2 => "\n\n[show on github](https://github.com/zeisler/this_project/blob/master/spec/markdown_ruby_documentation/git_hub_link_spec.rb#L7)" })
