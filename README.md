@@ -61,27 +61,33 @@ MarkdownRubyDocumentation::Generate.run(
 
 ### ERB Methods
 
-#### `print_method_source`
+#### `print_method_source(method)`
 The source of a method block returned as text.
 
-#### `eval_method`
+#### `eval_method(method)`
 The result of evaluating a method.
 
-#### `print_mark_doc_from`
+#### `print_mark_doc_from(method)`
 Prints out the mark doc from another method.
 
-#### `print_raw_comment`
+#### `print_raw_comment(method)`
 Prints out any comments proceeding a method def.
 
-#### `git_hub_method_url`
-Creates a url to GitHub based on the current sha or it defaults to master.
+#### `git_hub_method_url(method)`
+Creates a url to the method location on GitHub based on the current sha or it defaults to master.
 
-##### Example inputs
+##### `git_hub_file_url(method)`
+Creates a url to the file on GitHub based on the current sha or it defaults to master.
+
+##### Example method reference inputs
 
 * ".class_method_name" class method in the current scope.
 * "Constant.class_method_name" class method on a specific constant.
 * "SomeClass#instance_method_name" an instance method on a specific constant.
 * "#instance_method_name" an instance method in the current scope.
+
+#### `pretty_code(ruby_source)`
+Convert underscore methods to more English like sentence.
 
 Instance method that call other methods will results in an error.
 

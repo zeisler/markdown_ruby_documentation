@@ -139,6 +139,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
 
           #=mark_doc
           # <%= git_hub_method_url(".def_on_github") %>
+          # <%= git_hub_file_url("spec/markdown_ruby_documentation/template_parser_spec.rb") %>
           #=mark_end
           def method2
           end
@@ -152,7 +153,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it do
         result = described_class.new(Test, [:method2]).to_hash
 
-        expect(result).to eq({ method2: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb#L146\n" })
+        expect(result).to eq({ method2: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb#L147\nhttps://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb\n" })
       end
     end
 
@@ -171,6 +172,28 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
         result = described_class.new(Test, [:document_me]).to_hash
 
         expect(result).to eq({ document_me: "hello\n[//]: # (This method has no mark_end)" })
+      end
+    end
+
+    context "pretty_code" do
+      let!(:ruby_class) {
+        class Test
+
+          #=mark_doc
+          # <%= pretty_code(print_method_source("#format_me")) %>
+          def format_me
+            if :this_thing_works?
+              :run_the_system_1
+              'under_review'
+            end
+          end
+        end
+      }
+
+      it "adds comment at the end and parse the whole comment" do
+        result = described_class.new(Test, [:format_me]).to_hash
+
+        expect(result).to eq({ format_me: "If 'This thing works?'\n'Run the system 1'\n'under review'\nEnd\n[//]: # (This method has no mark_end)" })
       end
     end
   end

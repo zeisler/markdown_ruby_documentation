@@ -67,7 +67,22 @@ module MarkdownRubyDocumentation
 
       def git_hub_method_url(input)
         method = Method.create(input.dup)
-        GitHubLink::Url.new(subject: get_context_class(method), method_object: method)
+        GitHubLink::MethodUrl.new(subject: get_context_class(method), method_object: method)
+      end
+
+      def git_hub_file_url(file_path)
+        GitHubLink::FileUrl.new(file_path: file_path)
+      end
+
+      def pretty_code(source_code)
+        source_code.gsub(/["']?[a-z_A-Z?0-9]*["']?/) do |s|
+          if s.include?("_") && !(/["'][a-z_A-Z?0-9]*["']/ =~ s)
+            "'#{s.humanize}'"
+          else
+            s.humanize
+          end
+        end.gsub(":", '')
+
       end
 
       private
