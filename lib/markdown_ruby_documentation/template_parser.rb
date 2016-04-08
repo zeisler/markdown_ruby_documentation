@@ -71,7 +71,13 @@ module MarkdownRubyDocumentation
       end
 
       def git_hub_file_url(file_path)
-        GitHubLink::FileUrl.new(file_path: file_path)
+        if file_path.include?("/")
+          GitHubLink::FileUrl.new(file_path: file_path)
+        else
+          const    = Object.const_get(file_path)
+          a_method = const.public_instance_methods.first
+          git_hub_method_url("#{file_path}##{a_method}")
+        end
       end
 
       def pretty_code(source_code)
@@ -82,7 +88,18 @@ module MarkdownRubyDocumentation
             s.humanize
           end
         end.gsub(":", '')
+      end
 
+      def format_link(arg1, arg2=nil)
+        if arg2.nil?
+          method_ref = arg1.dasherize
+          title      = arg1.delete("#").delete(".").humanize
+        else
+          method_ref = arg2.dasherize
+          title      = arg1
+        end
+
+        "[#{title}](#{method_ref})"
       end
 
       private

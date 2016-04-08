@@ -196,5 +196,47 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
         expect(result).to eq({ format_me: "If 'This thing works?'\n'Run the system 1'\n'under review'\nEnd\n[//]: # (This method has no mark_end)" })
       end
     end
+
+    context "git_hub_file_url" do
+      let!(:ruby_class) {
+        class Test
+
+          #=mark_doc
+          # <%= git_hub_file_url("MarkdownRubyDocumentation::TemplateParser") %>
+          #=mark_end
+          def method10
+          end
+        end
+      }
+
+      it "gets the git hub url for that constant" do
+        result = described_class.new(Test, [:method10]).to_hash
+
+        expect(result).to eq({ method10: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/lib/markdown_ruby_documentation/template_parser.rb#L9\n"})
+      end
+    end
+
+    context "format_link" do
+      let!(:ruby_class) {
+        class Test
+
+          #=mark_doc
+          # <%= format_link "#i_do_other_things" %>
+          # <%= format_link "The method 10", "#i_do_other_things" %>
+          #=mark_end
+          def i_do_something
+          end
+
+          def i_do_other_things
+          end
+        end
+      }
+
+      it "auto formatting and custom" do
+        result = described_class.new(Test, [:i_do_something]).to_hash
+
+        expect(result).to eq({ i_do_something: "[I do other things](#i-do-other-things)\n[The method 10](#i-do-other-things)\n"})
+      end
+    end
   end
 end

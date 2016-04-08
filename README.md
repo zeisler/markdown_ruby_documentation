@@ -76,8 +76,9 @@ Prints out any comments proceeding a method def.
 #### `git_hub_method_url(method)`
 Creates a url to the method location on GitHub based on the current sha or it defaults to master.
 
-##### `git_hub_file_url(method)`
+##### `git_hub_file_url(file_path || Class)`
 Creates a url to the file on GitHub based on the current sha or it defaults to master.
+
 
 ##### Example method reference inputs
 
@@ -88,6 +89,10 @@ Creates a url to the file on GitHub based on the current sha or it defaults to m
 
 #### `pretty_code(ruby_source)`
 Convert underscore methods to more English like sentence.
+
+#### `format_link`
+format_link "#i_do_other_things" => [I do other things](#i-do-other-things)
+format_link "The method 10", "#i_do_other_things" => [The method 10](#i-do-other-things)
 
 Instance method that call other methods will results in an error.
 

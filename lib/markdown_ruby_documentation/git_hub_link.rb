@@ -40,9 +40,7 @@ module MarkdownRubyDocumentation
       end
 
       def blob(file)
-        v = `git ls-files -s #{relative_path(file)}`
-        return "master" if v
-        v
+        "master"
       end
 
       def relative_path(file)
