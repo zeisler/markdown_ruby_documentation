@@ -40,7 +40,7 @@ module MarkdownRubyDocumentation
       end
 
       def blob(file)
-        "master"
+        GitHubProject.branch
       end
 
       def relative_path(file)

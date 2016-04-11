@@ -18,7 +18,8 @@ module MarkdownRubyDocumentation
 
     def parser
       @parser ||= methods.each_with_object({}) do |meth, h|
-        value = parse_erb(strip_comment_hash(extract_dsl_comment_from_method(Method.create("##{meth}"))))
+        method = Method.create("##{meth}")
+        value  = parse_erb(insert_method_name(strip_comment_hash(extract_dsl_comment_from_method(method)), method), method)
         if value
           h[meth] = value
         end
@@ -38,7 +39,7 @@ module MarkdownRubyDocumentation
       # @example
       # @return [String]
       def print_mark_doc_from(str)
-        parse_erb(extract_dsl_comment(print_raw_comment(str)))
+        parse_erb(extract_dsl_comment(print_raw_comment(str)), Method.create(str))
       end
 
       # @param [String] str
@@ -49,7 +50,7 @@ module MarkdownRubyDocumentation
         when ClassMethod
           get_context_class(method).public_send(method.name)
         when InstanceMethod
-          eval(print_method_source(method.method_reference))
+          eval(print_method_source(method.to_s))
         end
       end
 
@@ -91,27 +92,43 @@ module MarkdownRubyDocumentation
       end
 
       def format_link(arg1, arg2=nil)
-        if arg2.nil?
-          method_ref = arg1.dasherize
-          title      = arg1.delete("#").delete(".").humanize
-        else
-          method_ref = arg2.dasherize
+        if arg2.nil? # format_link(<path> OR <const>)
+          method_ref = arg1
+          method     = Method.create(method_ref, null_method: true)
+          title = if (title = method.name)
+            title.to_s.humanize
+          else
+            method.context.to_s.split("::").last.humanize
+          end
+        else # format_link(arg1: <title>, arg2: <path> OR <const>)
+          method_ref = arg2
+          method     = Method.create(method_ref, null_method: true)
           title      = arg1
         end
-
-        "[#{title}](#{method_ref})"
+        path, anchor = *method.to_s.split("#")
+        formatted_path = [path, anchor.try!(:dasherize).try!(:delete, "?")].compact.join("#")
+        "[#{title}](#{formatted_path})"
       end
 
       private
 
-      def parse_erb(str)
+      def insert_method_name(string, method)
+        string.gsub("__method__", "'##{method.name.to_s}'")
+      end
+
+      def parse_erb(str, method)
+        filename, lineno = ruby_class_meth_source_location(method)
+
         ruby_class.module_eval(<<-RUBY, __FILE__, __LINE__+1)
         def self.get_binding
           self.send(:binding)
         end
         RUBY
         ruby_class.extend(CommentMacros)
-        ERB.new(str, nil, "-").result(ruby_class.get_binding)
+        erb = ERB.new(str, nil, "-")
+        erb.result(ruby_class.get_binding)
+      rescue => e
+        raise e.class, e.message, ["#{filename}:#{lineno}:in `#{method.name}'", *e.backtrace]
       end
 
       def strip_comment_hash(str)
@@ -120,6 +137,10 @@ module MarkdownRubyDocumentation
 
       def ruby_class_meth_comment(method)
         get_context_class(method).public_send(method.type, method.name).comment
+      end
+
+      def ruby_class_meth_source_location(method)
+        get_context_class(method).public_send(method.type, method.name).source_location
       end
 
       def extract_dsl_comment(comment_string)

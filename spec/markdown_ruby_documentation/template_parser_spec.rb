@@ -204,6 +204,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
           #=mark_doc
           # <%= git_hub_file_url("MarkdownRubyDocumentation::TemplateParser") %>
           #=mark_end
+          # @return [NilClass]
           def method10
           end
         end
@@ -212,7 +213,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it "gets the git hub url for that constant" do
         result = described_class.new(Test, [:method10]).to_hash
 
-        expect(result).to eq({ method10: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/lib/markdown_ruby_documentation/template_parser.rb#L9\n"})
+        expect(result).to eq({ method10: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/lib/markdown_ruby_documentation/template_parser.rb#L9\n" })
       end
     end
 
@@ -222,20 +223,46 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
 
           #=mark_doc
           # <%= format_link "#i_do_other_things" %>
-          # <%= format_link "The method 10", "#i_do_other_things" %>
+          # <%= format_link "The method 10", "#i_do_other_things?" %>
+          # <%= format_link "GoodBye", "path/to_the_thing#hello-goodbye" %>
+          # <%= format_link "path/to_the_thing#hello-goodbye" %>
+          # <%= format_link "path/to_the_other_thing" %>
           #=mark_end
           def i_do_something
           end
 
+          #=mark_doc
+          # <%= format_link __method__ %>
+          #=mark_end
           def i_do_other_things
           end
         end
       }
 
       it "auto formatting and custom" do
-        result = described_class.new(Test, [:i_do_something]).to_hash
+        result = described_class.new(Test, [:i_do_something, :i_do_other_things]).to_hash
 
-        expect(result).to eq({ i_do_something: "[I do other things](#i-do-other-things)\n[The method 10](#i-do-other-things)\n"})
+        expect(result).to eq({ i_do_something:    "[I do other things](#i-do-other-things)\n[The method 10](#i-do-other-things)\n[GoodBye](path/to_the_thing#hello-goodbye)\n[Hello-goodbye](path/to_the_thing#hello-goodbye)\n[Path/to the other thing](path/to_the_other_thing)\n",
+                               :i_do_other_things => "[I do other things](#i-do-other-things)\n" })
+      end
+    end
+
+    context "__method__" do
+      let!(:ruby_class) {
+        class Test
+
+          #=mark_doc
+          # <%= format_link __method__ %>
+          #=mark_end
+          def i_do_other_things
+          end
+        end
+      }
+
+      it "returns the commented method name" do
+        result = described_class.new(Test, [:i_do_other_things]).to_hash
+
+        expect(result).to eq({ :i_do_other_things => "[I do other things](#i-do-other-things)\n" })
       end
     end
   end

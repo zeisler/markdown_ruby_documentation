@@ -86,6 +86,7 @@ Creates a url to the file on GitHub based on the current sha or it defaults to m
 * "Constant.class_method_name" class method on a specific constant.
 * "SomeClass#instance_method_name" an instance method on a specific constant.
 * "#instance_method_name" an instance method in the current scope.
+    * `__method__` returns `#<current_method_name>`
 
 #### `pretty_code(ruby_source)`
 Convert underscore methods to more English like sentence.

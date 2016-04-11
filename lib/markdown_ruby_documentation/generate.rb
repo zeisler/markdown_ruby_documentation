@@ -30,7 +30,7 @@ module MarkdownRubyDocumentation
       end
 
       def call
-        output_proc.call(name:  subject.name,
+        output_proc.call(name: subject.name,
                          text: run_pipeline(string_pipeline, run_pipeline(methods_pipeline).to_s))
         self
       end
@@ -41,7 +41,7 @@ module MarkdownRubyDocumentation
           TemplateParser.new(subject, @methods),
           RejectBlankMethod,
           GitHubLink.new(subject: subject),
-          MarkdownPresenter.new(title: subject.name.titleize, title_key: section_key),
+          MarkdownPresenter.new(title: title, summary: summary, title_key: section_key),
         ]
       end
 
@@ -49,6 +49,27 @@ module MarkdownRubyDocumentation
         [
           MethodLinker.new(section_key: section_key, root_path: "./"),
         ]
+      end
+
+      def title
+        ancestors = subject.ancestors.select do |klass|
+          klass.is_a?(Class) && ![BasicObject, Object, subject].include?(klass)
+        end
+        [format_class(subject), *ancestors.map { |a| create_link_up_one_level(a)}].join(" < ")
+      end
+
+      def format_class(klass)
+        klass.name.titleize.split("/").last
+      end
+
+      def summary
+        descendants       = ObjectSpace.each_object(Class).select { |klass| klass < subject }
+        descendants_links = descendants.map { |d| create_link_up_one_level(d) }.join(", ")
+        "Descendants: #{descendants_links}" if descendants.count >= 1
+      end
+
+      def create_link_up_one_level(klass)
+        "[#{format_class(klass)}](../#{klass.name.underscore}.md)"
       end
 
       def run_pipeline(pipeline, last_result=nil)

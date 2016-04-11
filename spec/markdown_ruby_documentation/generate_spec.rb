@@ -1,6 +1,9 @@
 RSpec.describe MarkdownRubyDocumentation::Generate do
   module Namespace
-    class DocumentMe
+    class SuperThing
+    end
+
+    class DocumentMe < SuperThing
 
       #=mark_doc
       # This is an important part of the logic
@@ -25,6 +28,9 @@ RSpec.describe MarkdownRubyDocumentation::Generate do
         4
       end
 
+    end
+
+    class OtherThing < DocumentMe
     end
   end
 
@@ -57,7 +63,8 @@ RSpec.describe MarkdownRubyDocumentation::Generate do
     described_class.run(subjects:    [Namespace::DocumentMe],
                                  output_proc: -> (name:, text:) { output.merge!({ name => text }) })
     expect(output["Namespace::DocumentMe"]).to eq <<~MD
-      # Namespace/Document Me
+      # Document Me < [Super Thing](../namespace/super_thing.md)
+      Descendants: [Other Thing](../namespace/other_thing.md)
 
       ## The Sum Of A And B
       This is an important part of the logic
