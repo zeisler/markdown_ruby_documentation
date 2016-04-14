@@ -97,6 +97,18 @@ format_link "The method 10", "#i_do_other_things" => [The method 10](#i-do-other
 
 Instance method that call other methods will results in an error.
 
+#### `variables_as_local_links`
+variables_as_local_links("i_return_one + i_return_two") => "^`i_return_one` + ^`i_return_two`"
+
+#### `constants_with_name_and_value`
+constants_with_name_and_value("SOME_CONST_VALUE") => "`SOME_CONST_VALUE => "1"`"
+
+#### `quoted_strings_as_local_links`
+quoted_strings_as_local_links('"this is Bob"') => "^`the_is_bob`"
+
+#### `ruby_to_markdown`
+Converts case statements and if statements to bulleted markdown
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

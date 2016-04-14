@@ -24,8 +24,12 @@ module MarkdownRubyDocumentation
     private
 
     def present_items
-      items.reject { |k, v| v.blank? }.map do |name, text|
-        %[## #{name.to_s.titleize}\n#{text}]
+      items.map do |name, hash|
+        begin
+        %[## #{name.to_s.titleize}\n#{hash[:text]}] unless hash[:text].blank?
+        rescue =>e
+        puts e
+          end
       end.join("\n\n")
     end
 

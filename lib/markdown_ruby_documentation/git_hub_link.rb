@@ -9,13 +9,16 @@ module MarkdownRubyDocumentation
     end
 
     def call(hash)
-      hash.each_with_object({}) do |(meth, value), h|
-        h[meth] = "#{value}\n\n[show on github](#{create_link(meth)})"
+      hash.each do |name, values|
+        hash[name][:text] = "#{values[:text]}\n\n[show on github](#{create_link(name: name, method_object: values[:method_object])})"
       end
     end
 
-    def create_link(meth)
-      MethodUrl.new(subject: subject, base_url: base_url, root: root, method_object: Method.create("##{meth}")).to_s
+    def create_link(name: nil, method_object: nil)
+      if name && method_object.nil?
+        method_object = Method.create("##{name}")
+      end
+      MethodUrl.new(subject: subject, base_url: base_url, root: root, method_object: method_object).to_s
     end
 
     class FileUrl
@@ -31,6 +34,10 @@ module MarkdownRubyDocumentation
         link(file_path)
       end
 
+      def to_pathname
+        Pathname(to_s)
+      end
+
       def link(file, lineno=nil)
         str = File.join(base_url, "blob", blob(file), relative_path(file))
         unless lineno.nil?
@@ -44,7 +51,7 @@ module MarkdownRubyDocumentation
       end
 
       def relative_path(file)
-        file.sub(root.chomp, "")
+        file.sub(root, "")
       end
     end
 

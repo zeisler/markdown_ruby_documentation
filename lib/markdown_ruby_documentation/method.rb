@@ -1,10 +1,10 @@
 module MarkdownRubyDocumentation
   class Method
     attr_reader :method_reference
-    private :method_reference
+    protected :method_reference
 
     def initialize(method_reference)
-      @method_reference = method_reference
+      @method_reference = method_reference.to_s
     end
 
     # @param [String] method_reference
@@ -26,6 +26,16 @@ module MarkdownRubyDocumentation
           raise ArgumentError, "method_reference is formatted incorrectly: '#{method_reference}'"
         end
       end
+    end
+
+    def ==(other_method)
+      self.class == other_method.class && other_method.method_reference == self.method_reference
+    end
+
+    alias :eql? :==
+
+    def hash
+      @method_reference.hash
     end
 
     def self.===(value)
@@ -57,7 +67,11 @@ module MarkdownRubyDocumentation
 
     # @return [String]
     def to_s
-      method_reference.to_s
+      [context, type_symbol, name].reject { |s| s == :ruby_class }.join
+    end
+
+    def inspect
+      "#<#{self.class.name} #{to_s}>"
     end
   end
 end

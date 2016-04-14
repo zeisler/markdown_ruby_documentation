@@ -2,8 +2,9 @@ module MarkdownRubyDocumentation
   class TemplateParser
 
     def initialize(ruby_class, methods)
-      @ruby_class = ruby_class
-      @methods    = methods
+      @ruby_class        = ruby_class
+      @methods           = methods.map { |method| method.is_a?(Symbol) ? InstanceMethod.new("##{method}") : method }
+      @erb_methods_class = erb_methods_class
     end
 
     def to_hash(*args)
@@ -14,14 +15,47 @@ module MarkdownRubyDocumentation
 
     private
 
-    attr_reader :ruby_class, :methods
+    IGNORE_METHODS = %w(
+      initialize
+      inherited
+      included
+      extended
+      prepended
+      method_added
+      method_undefined
+      alias_method
+      append_features
+      attr
+      attr_accessor
+      attr_reader
+      attr_writer
+      define_method
+      extend_object
+      method_removed
+      module_function
+      prepend_features
+      private
+      protected
+      public
+      refine
+      remove_const
+      remove_method
+      undef_method
+      using
+    )
+
+    attr_reader :ruby_class, :methods, :erb_methods_class
 
     def parser
-      @parser ||= methods.each_with_object({}) do |meth, h|
-        method = Method.create("##{meth}")
-        value  = parse_erb(insert_method_name(strip_comment_hash(extract_dsl_comment_from_method(method)), method), method)
+      @parser ||= methods.each_with_object({}) do |method, hash|
+        begin
+          value = parse_erb(insert_method_name(strip_comment_hash(extract_dsl_comment_from_method(method)), method), method)
+        rescue MethodSource::SourceNotFoundError => e
+          value = false
+          puts e.message unless IGNORE_METHODS.any? { |im| e.message.include? im }
+        end
         if value
-          h[meth] = value
+          hash[method.name] = { text: value, method_object: method }
         end
       end
     end
@@ -39,7 +73,8 @@ module MarkdownRubyDocumentation
       # @example
       # @return [String]
       def print_mark_doc_from(str)
-        parse_erb(extract_dsl_comment(print_raw_comment(str)), Method.create(str))
+        method = Method.create(str)
+        parse_erb(insert_method_name(extract_dsl_comment(print_raw_comment(str)), method), method)
       end
 
       # @param [String] str
@@ -81,39 +116,94 @@ module MarkdownRubyDocumentation
         end
       end
 
-      def pretty_code(source_code)
-        source_code.gsub(/["']?[a-z_A-Z?0-9]*["']?/) do |s|
-          if s.include?("_") && !(/["'][a-z_A-Z?0-9]*["']/ =~ s)
-            "'#{s.humanize}'"
-          else
-            s.humanize
+      def pretty_code(source_code, humanize: true)
+        source_code = ternary_to_if_else(source_code)
+        source_code.gsub!(/return (unless|if)/, 'return nothing \1')
+        source_code.gsub!(/@[a-z][a-z0-9_]+ \|\|=?\s/, "") # @memoized_vars ||=
+        source_code.gsub!(":", '')
+        source_code.gsub!("&&", "and")
+        source_code.gsub!(">=", "is greater than or equal to")
+        source_code.gsub!("<=", "is less than or equal to")
+        source_code.gsub!(" < ", " is less than ")
+        source_code.gsub!(" > ", " is greater than ")
+        source_code.gsub!(" == ", " Equal to ")
+        source_code.gsub!("nil?", "is missing?")
+        source_code.gsub!("elsif", "else if")
+        source_code.gsub!("||", "or")
+        source_code.gsub!(/([0-9][0-9_]+)/) do |match|
+          match.gsub("_", ",")
+        end
+        if humanize
+          source_code.gsub!(/["']?[a-z_A-Z?!0-9]*["']?/) do |s|
+            if s.include?("_") && !(/["'][a-z_A-Z?0-9]*["']/ =~ s)
+              "'#{s.humanize}'"
+            else
+              s.humanize
+            end
           end
-        end.gsub(":", '')
+        end
+        source_code
       end
 
-      def format_link(arg1, arg2=nil)
-        if arg2.nil? # format_link(<path> OR <const>)
-          method_ref = arg1
-          method     = Method.create(method_ref, null_method: true)
-          title = if (title = method.name)
-            title.to_s.humanize
-          else
-            method.context.to_s.split("::").last.humanize
-          end
-        else # format_link(arg1: <title>, arg2: <path> OR <const>)
-          method_ref = arg2
-          method     = Method.create(method_ref, null_method: true)
-          title      = arg1
-        end
-        path, anchor = *method.to_s.split("#")
+      def ternary_to_if_else(ternary)
+        ternary.gsub(/(.*) \? (.*) \: (.*)/, "if \\1\n\\2\nelse\n\\3\nend")
+      end
+
+      def format_link(title, link_ref)
+        path, anchor   = *link_ref.to_s.split("#")
         formatted_path = [path, anchor.try!(:dasherize).try!(:delete, "?")].compact.join("#")
         "[#{title}](#{formatted_path})"
+      end
+
+      def title_from_link(link_ref)
+        [link_ref.split("/").last.split("#").last.to_s.humanize, link_ref]
+      end
+
+      def link_to_markdown(klass, title:)
+        return super if defined? super
+        raise "Client needs to define MarkdownRubyDocumentation::TemplateParser::CommentMacros#link_to_markdown"
+      end
+
+      def variables_as_local_links(ruby_source)
+        ruby_source.gsub(/(\b(?<!['"])[a-z_][a-z_0-9]*\b(?!['"]))/) { |match| "^`#{match}`" }
+      end
+
+      def quoted_strings_as_local_links(text)
+        text.gsub(/(['|"][a-zA-Z_0-9!?\s]+['|"])/) do |match|
+          variables_as_local_links match.underscore.gsub(" ", "_").gsub(/['|"]/, "")
+        end
+      end
+
+      def constants_with_name_and_value(ruby_source)
+        ruby_source.gsub(/([A-Z]+[A-Z_0-9]+)/) do |match|
+          value = ruby_class.const_get(match)
+          "`#{match} => #{value.inspect}`"
+        end
+      end
+
+      def ruby_to_markdown(ruby_source)
+        ruby_source = ruby_if_statement_to_md(ruby_source)
+        ruby_source = ruby_case_statement_to_md(ruby_source)
+      end
+
+      def ruby_if_statement_to_md(ruby_source)
+        ruby_source.gsub!(/if(.*)/,    "* __If__\\1\n__then__")
+        ruby_source.gsub!(/elsif(.*)/, "* __Else if__\\1\n__then__")
+        ruby_source.gsub!("else",  "* __Else__\n__then__")
+        ruby_source
+      end
+
+      def ruby_case_statement_to_md(ruby_source)
+        ruby_source.gsub!(/case(.*)/,    "* __Given__\\1")
+        ruby_source.gsub!(/when(.*)/,    "* __When__\\1\n__then__")
+        ruby_source.gsub!("else",  "* __Else__\n__then__")
+        ruby_source
       end
 
       private
 
       def insert_method_name(string, method)
-        string.gsub("__method__", "'##{method.name.to_s}'")
+        string.gsub("__method__", "'#{method.to_s}'")
       end
 
       def parse_erb(str, method)
@@ -137,6 +227,9 @@ module MarkdownRubyDocumentation
 
       def ruby_class_meth_comment(method)
         get_context_class(method).public_send(method.type, method.name).comment
+
+      rescue MethodSource::SourceNotFoundError => e
+        raise e.class, "#{get_context_class(method)}#{method.type_symbol}#{method.name}, \n#{e.message}"
       end
 
       def ruby_class_meth_source_location(method)

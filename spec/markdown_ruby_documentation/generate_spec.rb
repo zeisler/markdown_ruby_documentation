@@ -53,9 +53,9 @@ RSpec.describe MarkdownRubyDocumentation::Generate do
   before do
     stub_const("MarkdownRubyDocumentation::GitHubLink", NullMethodPipe)
     expect_any_instance_of(NullMethodPipe)
-      .to receive(:call)
-            .with({ :the_sum_of_a_and_b => "This is an important part of the logic\n```ruby\n2 + 4\n```\n```javascript\n{\"abc\":\"123\",\"xyz\":\"890\"}\n```\n" })
-            .and_call_original
+      .to receive(:call) { |args|
+        expect(convert_method_hash(args)).to eq({ :the_sum_of_a_and_b => "This is an important part of the logic\n```ruby\n2 + 4\n```\n```javascript\n{\"abc\":\"123\",\"xyz\":\"890\"}\n```\n" })
+      }.and_call_original
   end
 
   it "saves a markdown file with generated docs" do
@@ -63,8 +63,8 @@ RSpec.describe MarkdownRubyDocumentation::Generate do
     described_class.run(subjects:    [Namespace::DocumentMe],
                                  output_proc: -> (name:, text:) { output.merge!({ name => text }) })
     expect(output["Namespace::DocumentMe"]).to eq <<~MD
-      # Document Me < [Super Thing](../namespace/super_thing.md)
-      Descendants: [Other Thing](../namespace/other_thing.md)
+      # Document Me < [Super Thing](Namespace::SuperThing)
+      Descendants: [Other Thing](Namespace::OtherThing)
 
       ## The Sum Of A And B
       This is an important part of the logic
