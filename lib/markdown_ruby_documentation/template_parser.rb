@@ -135,7 +135,7 @@ module MarkdownRubyDocumentation
         end
         if humanize
           source_code.gsub!(/["']?[a-z_A-Z?!0-9]*["']?/) do |s|
-            if ruby_class.instance_methods.include?(remove_quotes(s).to_sym)
+            if [*ruby_class.public_instance_methods, *ruby_class.private_instance_methods].include?(remove_quotes(s).to_sym)
               "`#{s.humanize(capitalize: false)}`"
             else
               if s.include?("_") && !(/["'][a-z_A-Z?!0-9]*["']/ =~ s)

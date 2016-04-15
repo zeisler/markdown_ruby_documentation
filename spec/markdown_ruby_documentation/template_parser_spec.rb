@@ -225,12 +225,18 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
           def format_me
             return unless true
             return if true
-            @memoization ||= if this_thing_works? && true || false
+            @memoization ||= if this_thing_works? && true || false || public_1method
                                :run_the_system_30_day && 1_000
                                'under_review'
                              end
             true ? 'eligible' : 'decline'
           end
+
+          def public_1method
+
+          end
+
+          private
 
           def this_thing_works?
 
@@ -238,13 +244,13 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
         end
       }
 
-      it "finds any quoteds strings with ticks and converts to a local link" do
+      it "finds any quoted strings with ticks and converts to a local link" do
         result = described_class.new(Test, [:format_me]).to_hash
 
         expect(convert_method_hash result).to eq({ format_me: <<~TEXT.chomp })
           return nothing unless true
           return nothing if true
-          if ^`this_thing_works`? and true or false
+          if ^`this_thing_works`? and true or false or ^`public_1method`
           'Run the system 30 day' and 1,000
           'under review'
           end
