@@ -1,3 +1,4 @@
+
 module MarkdownRubyDocumentation
   class TemplateParser
 
@@ -218,20 +219,25 @@ module MarkdownRubyDocumentation
         ruby_source = ternary_to_if_else(ruby_source)
         ruby_source = ruby_if_statement_to_md(ruby_source)
         ruby_source = ruby_case_statement_to_md(ruby_source)
+        ruby_source = remove_end_keyword(ruby_source)
+      end
+
+      def remove_end_keyword(ruby_source)
+        ruby_source.gsub!(/^[\s]*end\n?/, "")
       end
 
       def ruby_if_statement_to_md(ruby_source)
         ruby_source.gsub!(/else if(.*)/, "* __ElseIf__\\1\n__Then__")
         ruby_source.gsub!(/elsif(.*)/, "* __ElseIf__\\1\n__Then__")
         ruby_source.gsub!(/if(.*)/, "* __If__\\1\n__Then__")
-        ruby_source.gsub!("else", "* __Else__\n__Then__")
+        ruby_source.gsub!("else", "* __Else__")
         ruby_source
       end
 
       def ruby_case_statement_to_md(ruby_source)
         ruby_source.gsub!(/case(.*)/, "* __Given__\\1")
         ruby_source.gsub!(/when(.*)/, "* __When__\\1\n__Then__")
-        ruby_source.gsub!("else", "* __Else__\n__Then__")
+        ruby_source.gsub!("else", "* __Else__")
         ruby_source
       end
 

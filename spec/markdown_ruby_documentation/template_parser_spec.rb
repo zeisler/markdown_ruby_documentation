@@ -280,7 +280,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it "gets the git hub url for that constant" do
         result = described_class.new(Test, [:method10]).to_hash
 
-        expect(convert_method_hash result).to eq({ method10: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/lib/markdown_ruby_documentation/template_parser.rb#L10\n" })
+        expect(convert_method_hash result).to eq({ method10: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/lib/markdown_ruby_documentation/template_parser.rb#L11\n" })
       end
     end
 
@@ -446,7 +446,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
             if true
               1
             else
-              2
+              2 + :end
             end
 
             case
@@ -482,24 +482,20 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
           __Then__
           1
           * __Else__
-          __Then__
-          2
-          end
+          2 + :end
 
           * __Given__
           * __When__ true
           __Then__
           'unavailable' + this_thing_works?
           * __Else__
-          __Then__
           'eligible' + public_1method
-          end
 
           * __Given__ true
           * __When__ true
           __Then__
           'unavailable'
-          end
+
         TEXT
       end
     end
