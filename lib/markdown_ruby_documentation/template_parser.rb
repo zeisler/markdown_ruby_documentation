@@ -118,7 +118,7 @@ module MarkdownRubyDocumentation
 
       def pretty_code(source_code, humanize: true)
         source_code = ternary_to_if_else(source_code)
-        source_code.gsub!(/return (unless|if)/, 'return nothing \1')
+        source_code = pretty_early_return(source_code)
         source_code.gsub!(/@[a-z][a-z0-9_]+ \|\|=?\s/, "") # @memoized_vars ||=
         source_code.gsub!(":", '')
         source_code.gsub!("&&", "and")
@@ -143,6 +143,10 @@ module MarkdownRubyDocumentation
           end
         end
         source_code
+      end
+
+      def pretty_early_return(source_code)
+        source_code.gsub(/return (unless|if)/, 'return nothing \1')
       end
 
       def ternary_to_if_else(ternary)
@@ -187,16 +191,16 @@ module MarkdownRubyDocumentation
       end
 
       def ruby_if_statement_to_md(ruby_source)
-        ruby_source.gsub!(/if(.*)/,    "* __If__\\1\n__then__")
-        ruby_source.gsub!(/elsif(.*)/, "* __Else if__\\1\n__then__")
-        ruby_source.gsub!("else",  "* __Else__\n__then__")
+        ruby_source.gsub!(/if(.*)/,    "* __If__\\1\n__Then__")
+        ruby_source.gsub!(/elsif(.*)/, "* __Else if__\\1\n__Then__")
+        ruby_source.gsub!("else",  "* __Else__\n__Then__")
         ruby_source
       end
 
       def ruby_case_statement_to_md(ruby_source)
         ruby_source.gsub!(/case(.*)/,    "* __Given__\\1")
-        ruby_source.gsub!(/when(.*)/,    "* __When__\\1\n__then__")
-        ruby_source.gsub!("else",  "* __Else__\n__then__")
+        ruby_source.gsub!(/when(.*)/,    "* __When__\\1\n__Then__")
+        ruby_source.gsub!("else",  "* __Else__\n__Then__")
         ruby_source
       end
 

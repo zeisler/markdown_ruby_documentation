@@ -387,25 +387,25 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
 
         expect(convert_method_hash result).to eq({ :i_add_stuff => <<~TEXT })
           * __If__ true
-          __then__
+          __Then__
           1
           * __Else__
-          __then__
+          __Then__
           2
           end
 
           * __Given__
           * __When__ true
-          __then__
+          __Then__
           'unavailable'
           * __Else__
-          __then__
+          __Then__
           'eligible'
           end
 
           * __Given__ true
           * __When__ true
-          __then__
+          __Then__
           'unavailable'
           end
         TEXT
