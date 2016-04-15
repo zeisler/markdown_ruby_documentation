@@ -202,7 +202,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
         expect(convert_method_hash result).to eq({ format_me: <<~TEXT.chomp })
           return nothing unless true
           return nothing if true
-          if `This thing works?` and true or false
+          if 'This thing works?' and true or false
           'Run the system 30 day' and 1,000
           'under review'
           end
@@ -250,7 +250,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
         expect(convert_method_hash result).to eq({ format_me: <<~TEXT.chomp })
           return nothing unless true
           return nothing if true
-          if ^`this_thing_works`? and true or false or ^`public_1method`
+          if 'This thing works?' and true or false or 'Public 1method'
           'Run the system 30 day' and 1,000
           'under review'
           end
@@ -341,14 +341,14 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
           # <%= variables_as_local_links "* __When__" %>
           #=mark_end
           def i_add_stuff
-            i_return_one + i_return_two + "hello"
+            i_return_one + i_return_two? + "hello"
           end
 
           def i_return_one
             1
           end
 
-          def i_return_two
+          def i_return_two?
             2
           end
         end
@@ -357,7 +357,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it "returns the commented method name" do
         result = described_class.new(Test, [:i_add_stuff]).to_hash
 
-        expect(convert_method_hash result).to eq({ :i_add_stuff => "^`i_return_one` + ^`i_return_two` + \"hello\"\n* __When__\n" })
+        expect(convert_method_hash result).to eq({ :i_add_stuff => "^`i_return_one` + ^`i_return_two?` + \"hello\"\n* __When__\n" })
       end
     end
 
@@ -421,15 +421,25 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
 
             case
             when true
-              'unavailable'
+              'unavailable' + this_thing_works?
             else
-              'eligible'
+              'eligible' + public_1method
             end
 
             case true
             when true
               'unavailable'
             end
+          end
+
+          def public_1method
+
+          end
+
+          private
+
+          def this_thing_works?
+
           end
         end
       }
@@ -449,10 +459,10 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
           * __Given__
           * __When__ true
           __Then__
-          'unavailable'
+          'unavailable' + this_thing_works?
           * __Else__
           __Then__
-          'eligible'
+          'eligible' + public_1method
           end
 
           * __Given__ true

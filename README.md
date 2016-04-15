@@ -100,8 +100,8 @@ format_link "The method 10", "#i_do_other_things" => [The method 10](#i-do-other
 
 Instance method that call other methods will results in an error.
 
-#### `variables_as_local_links`
-variables_as_local_links("i_return_one + i_return_two") => "^`i_return_one` + ^`i_return_two`"
+#### `method_as_local_links`
+method_as_local_links("i_return_one + i_return_two") => "^`i_return_one` + ^`i_return_two`"
 
 #### `constants_with_name_and_value`
 constants_with_name_and_value("SOME_CONST_VALUE") => "`SOME_CONST_VALUE => "1"`"

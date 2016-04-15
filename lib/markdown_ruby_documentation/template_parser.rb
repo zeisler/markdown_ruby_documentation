@@ -135,14 +135,10 @@ module MarkdownRubyDocumentation
         end
         if humanize
           source_code.gsub!(/["']?[a-z_A-Z?!0-9]*["']?/) do |s|
-            if [*ruby_class.public_instance_methods, *ruby_class.private_instance_methods].include?(remove_quotes(s).to_sym)
-              "`#{s.humanize(capitalize: false)}`"
+            if s.include?("_") && !(/["'][a-z_A-Z?!0-9]*["']/ =~ s)
+              "'#{s.humanize}'"
             else
-              if s.include?("_") && !(/["'][a-z_A-Z?!0-9]*["']/ =~ s)
-                "'#{s.humanize}'"
-              else
-                s.humanize(capitalize: false)
-              end
+              s.humanize(capitalize: false)
             end
           end
         end
@@ -190,20 +186,18 @@ module MarkdownRubyDocumentation
         raise "Client needs to define MarkdownRubyDocumentation::TemplateParser::CommentMacros#link_to_markdown"
       end
 
-      RUBY_KEYWORDS = %w[
-        BEGIN   END   __ENCODING__   __END__   __FILE__   __LINE__   alias   and   begin   break   case   class   def   defined?   do   else   elsif   end   ensure   false   for   if   in   module   next   nil   not   or   redo   rescue   retry   return   self   super   then   true   undef   unless   until   when   while   yield
-      ]
-
-      def variables_as_local_links(ruby_source)
-        ruby_source.gsub(/(\b(?<!['"])[a-z_][a-z_0-9]*\b(?!['"]))/) do |match|
-          RUBY_KEYWORDS.include?(match) ? match : "^`#{match}`"
+      def method_as_local_links(ruby_source)
+        ruby_source.gsub(/(\b(?<!['"])[a-z_][a-z_0-9?!]*(?!['"]))/) do |match|
+          is_a_method_on_ruby_class?(match) ? "^`#{match}`" : match
         end
       end
+
+      alias_method(:variables_as_local_links, :method_as_local_links)
 
       def quoted_strings_as_local_links(text, include: nil)
         text.gsub(/(['|"][a-zA-Z_0-9!?\s]+['|"])/) do |match|
           include_code(include, match) do
-            variables_as_local_links match.underscore.gsub(" ", "_").gsub(/['|"]/, "")
+            "^`#{remove_quotes(match).underscore.gsub(" ", "_")}`"
           end
         end
       end
@@ -236,6 +230,10 @@ module MarkdownRubyDocumentation
       end
 
       private
+
+      def is_a_method_on_ruby_class?(method)
+        [*ruby_class.public_instance_methods, *ruby_class.private_instance_methods].include?(remove_quotes(method).to_sym)
+      end
 
       def remove_quotes(string)
         string.gsub(/['|"]/, "")
