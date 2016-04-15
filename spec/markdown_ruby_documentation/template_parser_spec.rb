@@ -381,6 +381,36 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       end
     end
 
+    context "convert_early_return_to_if_else" do
+      let!(:ruby_class) {
+        class Test
+
+          #=mark_doc
+          # <%= convert_early_return_to_if_else print_method_source __method__ %>
+          #=mark_end
+          def i_add_stuff
+            return true if false
+            if :true
+              :do_stuff
+            end
+          end
+        end
+      }
+
+      it "returns the commented method name" do
+        result = described_class.new(Test, [:i_add_stuff]).to_hash
+
+        expect(convert_method_hash result).to eq({ :i_add_stuff => <<~TEXT })
+        if false
+        return true
+        end
+        if :true
+        :do_stuff
+        end
+        TEXT
+      end
+    end
+
     context "constants_with_name_and_value" do
       let!(:ruby_class) {
         class Test

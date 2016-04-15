@@ -163,6 +163,10 @@ module MarkdownRubyDocumentation
 
       private :include_code
 
+      def convert_early_return_to_if_else(source_code)
+        source_code.gsub(/(.+) if (.+)/, "if \\2\n\\1\nend")
+      end
+
       def pretty_early_return(source_code)
         source_code.gsub(/return (unless|if)/, 'return nothing \1')
       end
@@ -210,6 +214,8 @@ module MarkdownRubyDocumentation
       end
 
       def ruby_to_markdown(ruby_source)
+        ruby_source = convert_early_return_to_if_else(ruby_source)
+        ruby_source = ternary_to_if_else(ruby_source)
         ruby_source = ruby_if_statement_to_md(ruby_source)
         ruby_source = ruby_case_statement_to_md(ruby_source)
       end
