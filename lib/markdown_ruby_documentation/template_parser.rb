@@ -138,7 +138,7 @@ module MarkdownRubyDocumentation
             if s.include?("_") && !(/["'][a-z_A-Z?0-9]*["']/ =~ s)
               "'#{s.humanize}'"
             else
-              s.humanize
+              s.humanize(capitalize: false)
             end
           end
         end
@@ -168,8 +168,14 @@ module MarkdownRubyDocumentation
         raise "Client needs to define MarkdownRubyDocumentation::TemplateParser::CommentMacros#link_to_markdown"
       end
 
+      RUBY_KEYWORDS = %w[
+        BEGIN   END   __ENCODING__   __END__   __FILE__   __LINE__   alias   and   begin   break   case   class   def   defined?   do   else   elsif   end   ensure   false   for   if   in   module   next   nil   not   or   redo   rescue   retry   return   self   super   then   true   undef   unless   until   when   while   yield
+      ]
+
       def variables_as_local_links(ruby_source)
-        ruby_source.gsub(/(\b(?<!['"])[a-z_][a-z_0-9]*\b(?!['"]))/) { |match| "^`#{match}`" }
+        ruby_source.gsub(/(\b(?<!['"])[a-z_][a-z_0-9]*\b(?!['"]))/) do |match|
+          RUBY_KEYWORDS.include?(match) ? match : "^`#{match}`"
+        end
       end
 
       def quoted_strings_as_local_links(text)
@@ -191,16 +197,17 @@ module MarkdownRubyDocumentation
       end
 
       def ruby_if_statement_to_md(ruby_source)
-        ruby_source.gsub!(/if(.*)/,    "* __If__\\1\n__Then__")
-        ruby_source.gsub!(/elsif(.*)/, "* __Else if__\\1\n__Then__")
-        ruby_source.gsub!("else",  "* __Else__\n__Then__")
+        ruby_source.gsub!(/else if(.*)/, "* __ElseIf__\\1\n__Then__")
+        ruby_source.gsub!(/elsif(.*)/, "* __ElseIf__\\1\n__Then__")
+        ruby_source.gsub!(/if(.*)/, "* __If__\\1\n__Then__")
+        ruby_source.gsub!("else", "* __Else__\n__Then__")
         ruby_source
       end
 
       def ruby_case_statement_to_md(ruby_source)
-        ruby_source.gsub!(/case(.*)/,    "* __Given__\\1")
-        ruby_source.gsub!(/when(.*)/,    "* __When__\\1\n__Then__")
-        ruby_source.gsub!("else",  "* __Else__\n__Then__")
+        ruby_source.gsub!(/case(.*)/, "* __Given__\\1")
+        ruby_source.gsub!(/when(.*)/, "* __When__\\1\n__Then__")
+        ruby_source.gsub!("else", "* __Else__\n__Then__")
         ruby_source
       end
 

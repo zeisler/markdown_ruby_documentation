@@ -196,17 +196,17 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
         result = described_class.new(Test, [:format_me]).to_hash
 
         expect(convert_method_hash result).to eq({ format_me: <<~TEXT.chomp })
-          Return Nothing Unless True
-          Return Nothing If True
-          If 'This thing works?' And True Or False
-          'Run the system 1' And 1,000
+          return nothing unless true
+          return nothing if true
+          if 'This thing works?' and true or false
+          'Run the system 1' and 1,000
           'under review'
-          End
-          If True
+          end
+          if true
           'eligible'
-          Else
+          else
           'decline'
-          End
+          end
           [//]: # (This method has no mark_end)
         TEXT
       end
