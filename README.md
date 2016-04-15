@@ -91,6 +91,9 @@ Creates a url to the file on GitHub based on the current sha or it defaults to m
 #### `pretty_code(ruby_source)`
 Convert underscore methods to more English like sentence.
 
+#### `link_local_methods_from_pretty_code(pretty_code, include: <Optional array of matching strings>)`
+link_local_methods_from_pretty_code("`hello i am a method`") => "[hello i am a method](#hello-i-am-a-method)"
+
 #### `format_link`
 format_link "#i_do_other_things" => [I do other things](#i-do-other-things)
 format_link "The method 10", "#i_do_other_things" => [The method 10](#i-do-other-things)
@@ -103,7 +106,7 @@ variables_as_local_links("i_return_one + i_return_two") => "^`i_return_one` + ^`
 #### `constants_with_name_and_value`
 constants_with_name_and_value("SOME_CONST_VALUE") => "`SOME_CONST_VALUE => "1"`"
 
-#### `quoted_strings_as_local_links`
+#### `quoted_strings_as_local_links(text, include: <Optional array of matching strings>)`
 quoted_strings_as_local_links('"this is Bob"') => "^`the_is_bob`"
 
 #### `ruby_to_markdown`

@@ -135,15 +135,37 @@ module MarkdownRubyDocumentation
         end
         if humanize
           source_code.gsub!(/["']?[a-z_A-Z?!0-9]*["']?/) do |s|
-            if s.include?("_") && !(/["'][a-z_A-Z?!0-9]*["']/ =~ s)
-              "'#{s.humanize}'"
+            if ruby_class.instance_methods.include?(remove_quotes(s).to_sym)
+              "`#{s.humanize(capitalize: false)}`"
             else
-              s.humanize(capitalize: false)
+              if s.include?("_") && !(/["'][a-z_A-Z?!0-9]*["']/ =~ s)
+                "'#{s.humanize}'"
+              else
+                s.humanize(capitalize: false)
+              end
             end
           end
         end
         source_code
       end
+
+      def link_local_methods_from_pretty_code(pretty_code, include: nil)
+        pretty_code.gsub(/([`][a-zA-Z_0-9!?\s]+[`])/) do |match|
+          include_code(include, match) do
+            variables_as_local_links match.underscore.gsub(" ", "_").gsub(/`/, "")
+          end
+        end
+      end
+
+      def include_code(include, text, &do_action)
+        if include.nil? || (include.present? && include.include?(remove_quotes(text)))
+          do_action.call(text)
+        else
+          text
+        end
+      end
+
+      private :include_code
 
       def pretty_early_return(source_code)
         source_code.gsub(/return (unless|if)/, 'return nothing \1')
@@ -178,9 +200,11 @@ module MarkdownRubyDocumentation
         end
       end
 
-      def quoted_strings_as_local_links(text)
+      def quoted_strings_as_local_links(text, include: nil)
         text.gsub(/(['|"][a-zA-Z_0-9!?\s]+['|"])/) do |match|
-          variables_as_local_links match.underscore.gsub(" ", "_").gsub(/['|"]/, "")
+          include_code(include, match) do
+            variables_as_local_links match.underscore.gsub(" ", "_").gsub(/['|"]/, "")
+          end
         end
       end
 
@@ -212,6 +236,10 @@ module MarkdownRubyDocumentation
       end
 
       private
+
+      def remove_quotes(string)
+        string.gsub(/['|"]/, "")
+      end
 
       def insert_method_name(string, method)
         string.gsub("__method__", "'#{method.to_s}'")

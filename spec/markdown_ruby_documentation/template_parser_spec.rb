@@ -183,11 +183,15 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
           def format_me
             return unless true
             return if true
-            @memoization ||= if :this_thing_works? && true || false
+            @memoization ||= if this_thing_works? && true || false
                                :run_the_system_30_day && 1_000
                                'under_review'
                              end
             true ? 'eligible' : 'decline'
+          end
+
+          def this_thing_works?
+
           end
         end
       }
@@ -198,7 +202,49 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
         expect(convert_method_hash result).to eq({ format_me: <<~TEXT.chomp })
           return nothing unless true
           return nothing if true
-          if 'This thing works?' and true or false
+          if `This thing works?` and true or false
+          'Run the system 30 day' and 1,000
+          'under review'
+          end
+          if true
+          'eligible'
+          else
+          'decline'
+          end
+          [//]: # (This method has no mark_end)
+        TEXT
+      end
+    end
+
+    context "link_local_methods_from_pretty_code" do
+      let!(:ruby_class) {
+        class Test
+
+          #=mark_doc
+          # <%= link_local_methods_from_pretty_code pretty_code(print_method_source("#format_me")) %>
+          def format_me
+            return unless true
+            return if true
+            @memoization ||= if this_thing_works? && true || false
+                               :run_the_system_30_day && 1_000
+                               'under_review'
+                             end
+            true ? 'eligible' : 'decline'
+          end
+
+          def this_thing_works?
+
+          end
+        end
+      }
+
+      it "finds any quoteds strings with ticks and converts to a local link" do
+        result = described_class.new(Test, [:format_me]).to_hash
+
+        expect(convert_method_hash result).to eq({ format_me: <<~TEXT.chomp })
+          return nothing unless true
+          return nothing if true
+          if ^`this_thing_works`? and true or false
           'Run the system 30 day' and 1,000
           'under review'
           end
@@ -314,10 +360,10 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
         class Test
 
           #=mark_doc
-          # <%= quoted_strings_as_local_links print_method_source(__method__) %>
+          # <%= quoted_strings_as_local_links(print_method_source(__method__), include: ['I return one Hello', "goodbye"] ) %>
           #=mark_end
           def i_add_stuff
-            'I return one Hello' + 'Site x property value'
+            'I return one Hello' + 'Site x property value' + 'goodbye'
           end
         end
       }
@@ -325,7 +371,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it "returns the commented method name" do
         result = described_class.new(Test, [:i_add_stuff]).to_hash
 
-        expect(convert_method_hash result).to eq({ :i_add_stuff => "^`i_return_one_hello` + ^`site_x_property_value`\n" })
+        expect(convert_method_hash result).to eq({ :i_add_stuff => "^`i_return_one_hello` + 'Site x property value' + ^`goodbye`\n" })
       end
     end
 
