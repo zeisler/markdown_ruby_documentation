@@ -130,12 +130,12 @@ module MarkdownRubyDocumentation
         source_code.gsub!("nil?", "is missing?")
         source_code.gsub!("elsif", "else if")
         source_code.gsub!("||", "or")
-        source_code.gsub!(/([0-9][0-9_]+)/) do |match|
+        source_code.gsub!(/([0-9][0-9_]+[0-9]+)/) do |match|
           match.gsub("_", ",")
         end
         if humanize
           source_code.gsub!(/["']?[a-z_A-Z?!0-9]*["']?/) do |s|
-            if s.include?("_") && !(/["'][a-z_A-Z?0-9]*["']/ =~ s)
+            if s.include?("_") && !(/["'][a-z_A-Z?!0-9]*["']/ =~ s)
               "'#{s.humanize}'"
             else
               s.humanize(capitalize: false)

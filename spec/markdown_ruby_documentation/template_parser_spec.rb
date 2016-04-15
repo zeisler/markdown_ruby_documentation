@@ -184,7 +184,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
             return unless true
             return if true
             @memoization ||= if :this_thing_works? && true || false
-                               :run_the_system_1 && 1_000
+                               :run_the_system_30_day && 1_000
                                'under_review'
                              end
             true ? 'eligible' : 'decline'
@@ -199,7 +199,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
           return nothing unless true
           return nothing if true
           if 'This thing works?' and true or false
-          'Run the system 1' and 1,000
+          'Run the system 30 day' and 1,000
           'under review'
           end
           if true
