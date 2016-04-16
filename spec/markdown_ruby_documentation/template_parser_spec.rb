@@ -443,6 +443,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
           # <%= ruby_to_markdown print_method_source(__method__) %>
           #=mark_end
           def i_add_stuff
+            return if true
             if true
               1
             else
@@ -478,6 +479,9 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
         result = described_class.new(Test, [:i_add_stuff]).to_hash
 
         expect(convert_method_hash result).to eq({ :i_add_stuff => <<~TEXT })
+          * __If__ true
+          __Then__
+          return nothing
           * __If__ true
           __Then__
           1

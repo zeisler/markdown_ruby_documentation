@@ -215,6 +215,7 @@ module MarkdownRubyDocumentation
       end
 
       def ruby_to_markdown(ruby_source)
+        ruby_source = pretty_early_return(ruby_source)
         ruby_source = convert_early_return_to_if_else(ruby_source)
         ruby_source = ternary_to_if_else(ruby_source)
         ruby_source = ruby_if_statement_to_md(ruby_source)
