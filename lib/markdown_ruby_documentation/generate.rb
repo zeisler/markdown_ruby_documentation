@@ -1,6 +1,7 @@
 module MarkdownRubyDocumentation
   class Generate
     # @param [Class] subjects ruby classes to generate documentation from.
+    # @param [Module] erb_methods must contain #link_to_markdown and contain any additional methods for comment ERB
     # @param [Proc] output_proc given name: and text: for use in saving the the files.
     def self.run(
       subjects:, erb_methods: DefaultErbMethods, output_proc: -> (name:, text:) { { name => text } }
@@ -30,23 +31,15 @@ module MarkdownRubyDocumentation
                      methods: [],
                      output_proc:,
                      erb_methods_class:)
-        if methods.empty?
-          instance_m = subject.instance_methods(false).concat(subject.private_instance_methods(false))
-          klass_m    = subject.methods(false).concat(subject.private_methods(false)) - Object.methods
-          methods.concat instance_m.map { |method| InstanceMethod.new("#{subject.name}##{method}") }
-          methods.concat klass_m.map { |method| ClassMethod.new("#{subject.name}.#{method}") }
-        else
-          methods.map! { |method| method.is_a?(Symbol) ? InstanceMethod.new("#{subject.name}##{method}") : method }
-        end
+        initialize_methods(methods, subject)
         @erb_methods_class = erb_methods_class
-        @subject     = subject
-        methods      = methods.map { |method| method.is_a?(Symbol) ? InstanceMethod.new("#{subject.name}##{method}") : method }
-        @methods     = methods
-        @output_proc = output_proc
+        @subject           = subject
+        methods            = methods
+        @methods           = methods
+        @output_proc       = output_proc
       end
 
       def call
-        puts subject.inspect
         methods_pipes = run_pipeline(methods_pipeline)
         text          = run_pipeline(string_pipeline, methods_pipes)
         output_proc.call(name: subject.name,
@@ -55,13 +48,28 @@ module MarkdownRubyDocumentation
       end
 
       private
+      def initialize_methods(methods, subject)
+        if methods.empty?
+          all_instance_and_class_methods(methods, subject)
+        else
+          methods.map! { |method| method.is_a?(Symbol) ? InstanceMethod.new("#{subject.name}##{method}") : method }
+        end
+      end
+
+      def all_instance_and_class_methods(methods, subject)
+        instance_m = subject.instance_methods(false).concat(subject.private_instance_methods(false))
+        klass_m    = subject.methods(false).concat(subject.private_methods(false)) - Object.methods
+        methods.concat instance_m.map { |method| InstanceMethod.new("#{subject.name}##{method}") }
+        methods.concat klass_m.map { |method| ClassMethod.new("#{subject.name}.#{method}") }
+      end
+
       def methods_pipeline
         [
           TemplateParser.new(subject, @methods),
           RejectBlankMethod,
           GitHubLink.new(subject: subject),
           ConstantsPresenter.new(subject),
-          MarkdownPresenter.new(title: title, summary: summary, title_key: section_key),
+          MarkdownPresenter.new(summary: summary, title_key: section_key),
         ]
       end
 
@@ -71,25 +79,8 @@ module MarkdownRubyDocumentation
         ]
       end
 
-      def title
-        ancestors = subject.ancestors.select do |klass|
-          klass.is_a?(Class) && ![BasicObject, Object, subject].include?(klass)
-        end
-        [format_class(subject), *ancestors.map { |a| create_link_up_one_level(a) }].join(" < ")
-      end
-
-      def format_class(klass)
-        klass.name.titleize.split("/").last
-      end
-
       def summary
-        descendants       = ObjectSpace.each_object(Class).select { |klass| klass < subject }
-        descendants_links = descendants.map { |d| create_link_up_one_level(d) }.join(", ")
-        "Descendants: #{descendants_links}" if descendants.count >= 1
-      end
-
-      def create_link_up_one_level(klass)
-        erb_methods_class.link_to_markdown(klass.to_s, title: format_class(klass))
+        @summary ||= Summary.new(subject: subject, erb_methods_class: erb_methods_class)
       end
 
       def run_pipeline(pipeline, last_result=nil)

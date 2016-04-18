@@ -1,4 +1,5 @@
 require "markdown_ruby_documentation/version"
+require "markdown_ruby_documentation/summary"
 require "markdown_ruby_documentation/template_parser"
 require "markdown_ruby_documentation/markdown_presenter"
 require "markdown_ruby_documentation/generate"
@@ -16,6 +17,8 @@ require "markdown_ruby_documentation/constants_presenter"
 require "active_support/core_ext/string"
 require "method_source"
 require "json"
+require "active_support/dependencies/autoload"
+require "active_support/number_helper"
 
 module MarkdownRubyDocumentation
   START_TOKEN = "=mark_doc".freeze

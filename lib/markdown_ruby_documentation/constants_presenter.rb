@@ -1,6 +1,3 @@
-require "active_support/dependencies/autoload"
-require "active_support/number_helper"
-
 module MarkdownRubyDocumentation
   class ConstantsPresenter
 

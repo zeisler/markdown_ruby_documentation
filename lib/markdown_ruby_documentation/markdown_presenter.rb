@@ -1,10 +1,9 @@
 module MarkdownRubyDocumentation
   class MarkdownPresenter
 
-    attr_reader :title, :items, :title_key, :summary
+    attr_reader :items, :title_key, :summary
 
-    def initialize(title:, items: nil, summary:, title_key:, skip_blanks: true)
-      @title       = title
+    def initialize(items: nil, summary:, title_key:, skip_blanks: true)
       @items       = items
       @summary     = summary
       @title_key   = title_key
@@ -14,8 +13,8 @@ module MarkdownRubyDocumentation
     def call(items=nil)
       @items ||= items
       <<-MD
-# #{title}
-#{summary}
+# #{summary.title}
+#{summary.summary}
 
 #{present_items}
       MD

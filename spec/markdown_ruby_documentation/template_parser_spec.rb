@@ -280,7 +280,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it "gets the git hub url for that constant" do
         result = described_class.new(Test, [:method10]).to_hash
 
-        expect(convert_method_hash result).to eq({ method10: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/lib/markdown_ruby_documentation/template_parser.rb#L11\n" })
+        expect(convert_method_hash result).to eq({ method10: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/lib/markdown_ruby_documentation/template_parser.rb#L10\n" })
       end
     end
 
@@ -407,6 +407,28 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
         if :true
         :do_stuff
         end
+        TEXT
+      end
+    end
+
+    context "readable_ruby_numbers" do
+      let!(:ruby_class) {
+        class Test
+
+          #=mark_doc
+          # <%= readable_ruby_numbers print_method_source __method__ %>
+          #=mark_end
+          def i_add_stuff
+            1 + 1_000 + 90_1_1_1 + 10 + 90000.9
+          end
+        end
+      }
+
+      it "returns the commented method name" do
+        result = described_class.new(Test, [:i_add_stuff]).to_hash
+
+        expect(convert_method_hash result).to eq({ :i_add_stuff => <<~TEXT })
+        1 + 1,000 + 90,111 + 10 + 90,000.9
         TEXT
       end
     end

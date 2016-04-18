@@ -1,4 +1,3 @@
-
 module MarkdownRubyDocumentation
   class TemplateParser
 
@@ -146,6 +145,17 @@ module MarkdownRubyDocumentation
         source_code
       end
 
+      def readable_ruby_numbers(source_code, &block)
+        source_code.gsub(/([0-9][0-9_]+[0-9]+)/) do |match|
+          value = eval(match)
+          if block_given?
+            block.call(value)
+          else
+            ActiveSupport::NumberHelper.number_to_delimited(value)
+          end
+        end
+      end
+
       def link_local_methods_from_pretty_code(pretty_code, include: nil)
         pretty_code.gsub(/([`][a-zA-Z_0-9!?\s]+[`])/) do |match|
           include_code(include, match) do
@@ -215,6 +225,7 @@ module MarkdownRubyDocumentation
       end
 
       def ruby_to_markdown(ruby_source)
+        ruby_source = readable_ruby_numbers(ruby_source)
         ruby_source = pretty_early_return(ruby_source)
         ruby_source = convert_early_return_to_if_else(ruby_source)
         ruby_source = ternary_to_if_else(ruby_source)

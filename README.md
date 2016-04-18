@@ -112,6 +112,9 @@ quoted_strings_as_local_links('"this is Bob"') => "^`the_is_bob`"
 #### `ruby_to_markdown`
 Converts case statements and if statements to bulleted markdown
 
+#### `readable_ruby_numbers`
+Add commas to any ruby numbers. To provide additional formatting it yields a block given the number object.
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
