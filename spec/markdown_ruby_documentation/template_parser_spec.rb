@@ -67,19 +67,21 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
           # Whatever!
           #=mark_end
           def method4
+            "im 4"
           end
 
           #=mark_doc
           # <%= eval_method("Test2#method6") %>
           #=mark_end
           def method5
-            "im 5"
+            "im 5" + method4
           end
 
           #=mark_doc
-          # <%= eval_method("#method5") %>
+          # <%= eval_method("#method6") %>
           #=mark_end
           def method6
+            method5
           end
         end
 
@@ -102,7 +104,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it "complies comments references" do
         result = described_class.new(Test, [:method2, :method3, :method4, :method5, :method6]).to_hash
 
-        expect(convert_method_hash result).to eq({ :method2 => "{:key=>\"fun\"}\n", method3: "Im method 5\n", :method4 => "[1,\n2,\n3,\n0]\nWhatever!\n", :method5 => "[1, 2, 3, 0]\n", :method6 => "im 5\n" })
+        expect(convert_method_hash result).to eq({ :method2 => "{:key=>\"fun\"}\n", method3: "Im method 5\n", :method4 => "[1,\n2,\n3,\n0]\nWhatever!\n", :method5 => "[1, 2, 3, 0]\n", :method6 => "im 5im 4\n" })
       end
     end
 
@@ -152,7 +154,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it do
         result = described_class.new(Test, [:method2]).to_hash
 
-        expect(convert_method_hash result).to eq({ method2: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb#L146\nhttps://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb\n" })
+        expect(convert_method_hash result).to eq({ method2: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb#L148\nhttps://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb\n" })
       end
     end
 

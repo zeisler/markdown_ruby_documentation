@@ -85,8 +85,31 @@ module MarkdownRubyDocumentation
         when ClassMethod
           get_context_class(method).public_send(method.name)
         when InstanceMethod
-          eval(print_method_source(method.to_s))
+          _module = Module.new
+          rescue_and_define_method(_module) do |_module|
+            create_method(method, _module)
+            _module.send(method.name)
+          end
         end
+      end
+
+      def rescue_and_define_method(_module, &block)
+        block.call(_module)
+      rescue NameError => e
+        if (undefined_method = e.message.match(/undefined local variable or method `(.+)'/).try!(:captures).try!(:first))
+          undefined_method = Method.create("##{undefined_method}")
+          create_method(undefined_method, _module)
+          rescue_and_define_method(_module, &block)
+        end
+      end
+
+      def create_method(method, m=Module.new)
+        m.instance_eval <<-RUBY
+          def #{method.name}
+        #{print_method_source(method.to_s)}
+          end
+        RUBY
+        m
       end
 
       # @param [String] input
