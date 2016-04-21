@@ -45,6 +45,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
 
     context "eval_method:" do
       let!(:ruby_class) {
+        module Nesting
         class Test
           SCOPED_CONSTANT_VALUE = "1001"
 
@@ -86,6 +87,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
             method5
           end
         end
+        end
 
         class Test2
           # @return String
@@ -104,7 +106,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       }
 
       it "complies comments references" do
-        result = described_class.new(Test, [
+        result = described_class.new(Nesting::Test, [
           :method2,
           :method3,
           :method4,

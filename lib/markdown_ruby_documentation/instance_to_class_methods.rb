@@ -17,7 +17,7 @@ module MarkdownRubyDocumentation
     private
 
     def new_class_name
-      "InstanceToClassMethods#{method_object.context.name}#{('A'..'Z').to_a.sample(5).join}"
+      "InstanceToClassMethods#{method_object.context.name}#{('A'..'Z').to_a.sample(5).join}".delete("::")
     end
 
     def rescue_and_define_method(_module, &block)
