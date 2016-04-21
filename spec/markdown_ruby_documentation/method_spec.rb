@@ -71,9 +71,9 @@ RSpec.describe MarkdownRubyDocumentation::Method do
   context "a null method" do
     subject { described_class.create("OtherContext", null_method: true) }
     it { expect(subject).to be_an_instance_of(MarkdownRubyDocumentation::NullMethod) }
-    it { expect(subject.context).to eq :OtherContext }
+    it { expect(subject.context).to eq OtherContext }
     it { expect(subject.name).to eq nil }
-    it { expect(subject.context_name).to eq "Kernel" }
+    it { expect(subject.context_name).to eq "OtherContext" }
     it { expect{subject.to_proc}.to raise_error("Not convertible to a proc") }
     it { expect(subject.to_s).to eq "OtherContext" }
   end

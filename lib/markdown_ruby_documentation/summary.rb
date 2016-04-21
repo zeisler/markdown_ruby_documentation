@@ -14,7 +14,8 @@ class Summary
   end
 
   def summary
-    descendants       = ObjectSpace.each_object(Class).select { |klass| klass < subject }
+    descendants = ObjectSpace.each_object(Class).select { |klass| klass < subject && !klass.name.include?("InstanceToClassMethods") }
+
     descendants_links = descendants.map { |d| create_link(d) }.join(", ")
     "Descendants: #{descendants_links}" if descendants.count >= 1
   end
