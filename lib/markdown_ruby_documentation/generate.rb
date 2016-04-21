@@ -52,15 +52,15 @@ module MarkdownRubyDocumentation
         if methods.empty?
           all_instance_and_class_methods(methods, subject)
         else
-          methods.map! { |method| method.is_a?(Symbol) ? InstanceMethod.new("#{subject.name}##{method}") : method }
+          methods.map! { |method| method.is_a?(Symbol) ? InstanceMethod.new("#{subject.name}##{method}", context: subject) : method }
         end
       end
 
       def all_instance_and_class_methods(methods, subject)
         instance_m = subject.instance_methods(false).concat(subject.private_instance_methods(false))
         klass_m    = subject.methods(false).concat(subject.private_methods(false)) - Object.methods
-        methods.concat instance_m.map { |method| InstanceMethod.new("#{subject.name}##{method}") }
-        methods.concat klass_m.map { |method| ClassMethod.new("#{subject.name}.#{method}") }
+        methods.concat instance_m.map { |method| InstanceMethod.new("#{subject.name}##{method}", context: subject) }
+        methods.concat klass_m.map { |method| ClassMethod.new("#{subject.name}.#{method}", context: subject) }
       end
 
       def methods_pipeline

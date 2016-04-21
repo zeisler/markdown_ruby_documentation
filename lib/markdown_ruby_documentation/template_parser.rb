@@ -3,7 +3,7 @@ module MarkdownRubyDocumentation
 
     def initialize(ruby_class, methods)
       @ruby_class        = ruby_class
-      @methods           = methods.map { |method| method.is_a?(Symbol) ? InstanceMethod.new("##{method}") : method }
+      @methods           = methods.map { |method| method.is_a?(Symbol) ? InstanceMethod.new("##{method}", context: ruby_class) : method }
       @erb_methods_class = erb_methods_class
     end
 
@@ -66,14 +66,14 @@ module MarkdownRubyDocumentation
       # @example
       # @return [String] of any comments proceeding a method def
       def print_raw_comment(str)
-        strip_comment_hash(ruby_class_meth_comment(Method.create(str)))
+        strip_comment_hash(ruby_class_meth_comment(Method.create(str, context: ruby_class)))
       end
 
       # @param [String] str
       # @example
       # @return [String]
       def print_mark_doc_from(str)
-        method = Method.create(str)
+        method = Method.create(str, context: ruby_class)
         parse_erb(insert_method_name(extract_dsl_comment(print_raw_comment(str)), method), method)
       end
 
@@ -81,51 +81,24 @@ module MarkdownRubyDocumentation
       # @example
       # @return [Object] anything that the evaluated method would return.
       def eval_method(str)
-        case (method = Method.create(str))
+        case (method = Method.create(str, context: ruby_class))
         when ClassMethod
-          get_context_class(method).public_send(method.name)
+          k = get_context_class(method)
+            k.public_send(method.name)
         when InstanceMethod
-          _module = Module.new
-          rescue_and_define_method(_module) do |_module|
-            create_method(method, _module)
-            _module.send(method.name)
-          end
+          InstanceToClassMethods.new(method: method).eval_instance_method
         end
-      end
-
-      def rescue_and_define_method(_module, &block)
-        block.call(_module)
-      rescue NameError => e
-        if (undefined_method = e.message.match(/undefined local variable or method `(.+)'/).try!(:captures).try!(:first))
-          undefined_method = Method.create("##{undefined_method}")
-          create_method(undefined_method, _module)
-          rescue_and_define_method(_module, &block)
-        end
-      end
-
-      def create_method(method, m=Module.new)
-        m.instance_eval <<-RUBY
-          def #{method.name}
-        #{print_method_source(method.to_s)}
-          end
-        RUBY
-        m
       end
 
       # @param [String] input
       # @return [String] the source of a method block is returned as text.
       def print_method_source(input)
-        method = Method.create(input.dup)
-        get_context_class(method)
-          .public_send(method.type, method.name)
-          .source
-          .split("\n")[1..-2]
-          .map(&:lstrip)
-          .join("\n")
+        method = Method.create(input.dup, context: ruby_class)
+        PrintMethodSource.new(method: method).print
       end
 
       def git_hub_method_url(input)
-        method = Method.create(input.dup)
+        method = Method.create(input.dup, context: ruby_class)
         GitHubLink::MethodUrl.new(subject: get_context_class(method), method_object: method)
       end
 
@@ -138,7 +111,7 @@ module MarkdownRubyDocumentation
           git_hub_method_url("#{file_path}##{a_method}")
         end
       end
-
+      
       def pretty_code(source_code, humanize: true)
         source_code = ternary_to_if_else(source_code)
         source_code = pretty_early_return(source_code)
@@ -349,11 +322,7 @@ module MarkdownRubyDocumentation
       end
 
       def get_context_class(method)
-        if method.context == :ruby_class
-          ruby_class
-        else
-          method.context.to_s.constantize
-        end
+        method.context
       end
     end
     include CommentMacros

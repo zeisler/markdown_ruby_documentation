@@ -3,8 +3,9 @@ module MarkdownRubyDocumentation
     attr_reader :method_reference
     protected :method_reference
 
-    def initialize(method_reference)
+    def initialize(method_reference, context: Kernel)
       @method_reference = method_reference.to_s
+      @context          = context
     end
 
     # @param [String] method_reference
@@ -13,15 +14,15 @@ module MarkdownRubyDocumentation
     #   "Constant.class_method_name" class method on a specific constant.
     #   "SomeClass#instance_method_name" an instance method on a specific constant.
     #   "#instance_method_name" an instance method in the current scope.
-    def self.create(method_reference, null_method: false)
+    def self.create(method_reference, null_method: false, context: Kernel)
       case method_reference
       when InstanceMethod
-        InstanceMethod.new(method_reference)
+        InstanceMethod.new(method_reference, context: context)
       when ClassMethod
-        ClassMethod.new(method_reference)
+        ClassMethod.new(method_reference, context: context)
       else
         if null_method
-          NullMethod.new(method_reference)
+          NullMethod.new(method_reference, context: context)
         else
           raise ArgumentError, "method_reference is formatted incorrectly: '#{method_reference}'"
         end
@@ -51,12 +52,17 @@ module MarkdownRubyDocumentation
       self.class.type_symbol
     end
 
-    # @return [Symbol]
+    # @return [Class]
     def context
       if method_reference.start_with?(type_symbol)
-        :ruby_class
+        @context
       else
-        method_reference.split(type_symbol).first.try!(:to_sym)
+        constant = method_reference.split(type_symbol).first
+        begin
+          constant.constantize
+        rescue NameError => e
+          @context.const_get(constant)
+        end
       end
     end
 
@@ -67,11 +73,21 @@ module MarkdownRubyDocumentation
 
     # @return [String]
     def to_s
-      [context, type_symbol, name].reject { |s| s == :ruby_class }.join
+      method_reference
     end
 
+    # @return [String]
     def inspect
       "#<#{self.class.name} #{to_s}>"
+    end
+
+    # @return [Proc]
+    def to_proc
+      context.public_send(type, name)
+    end
+
+    def type
+      raise NotImplementedError
     end
   end
 end

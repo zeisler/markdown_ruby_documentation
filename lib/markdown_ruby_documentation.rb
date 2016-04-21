@@ -1,5 +1,7 @@
 require "markdown_ruby_documentation/version"
 require "markdown_ruby_documentation/summary"
+require "markdown_ruby_documentation/instance_to_class_methods"
+require "markdown_ruby_documentation/print_method_source"
 require "markdown_ruby_documentation/template_parser"
 require "markdown_ruby_documentation/markdown_presenter"
 require "markdown_ruby_documentation/generate"

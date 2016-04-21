@@ -13,6 +13,10 @@ module MarkdownRubyDocumentation
       raise "Does not have a type"
     end
 
+    def to_proc
+      raise "Not convertible to a proc"
+    end
+
     def context
       method_reference.to_sym
     end

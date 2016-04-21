@@ -46,6 +46,8 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
     context "eval_method:" do
       let!(:ruby_class) {
         class Test
+          SCOPED_CONSTANT_VALUE = "1001"
+
           def self.method1
             { key: "fun" }
           end
@@ -57,13 +59,13 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
           end
 
           #=mark_doc
-          # <%= eval_method("Test2.method5") %>
+          # <%= eval_method("Test2.method7") %>
           #=mark_end
           def method3
           end
 
           #=mark_doc
-          # <%= print_method_source("Test2#method6") %>
+          # <%= print_method_source("Test2#method8") %>
           # Whatever!
           #=mark_end
           def method4
@@ -71,10 +73,10 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
           end
 
           #=mark_doc
-          # <%= eval_method("Test2#method6") %>
+          # <%= eval_method("Test2#method8") %>
           #=mark_end
           def method5
-            "im 5" + method4
+            "im 5" + method4 + SCOPED_CONSTANT_VALUE
           end
 
           #=mark_doc
@@ -87,12 +89,12 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
 
         class Test2
           # @return String
-          def self.method5
-            "Im method 5"
+          def self.method7
+            "Im method 7"
           end
 
           # @return Array
-          def method6
+          def method8
             [1,
              2,
              3,
@@ -102,9 +104,15 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       }
 
       it "complies comments references" do
-        result = described_class.new(Test, [:method2, :method3, :method4, :method5, :method6]).to_hash
+        result = described_class.new(Test, [
+          :method2,
+          :method3,
+          :method4,
+          :method5,
+          :method6,
+        ]).to_hash
 
-        expect(convert_method_hash result).to eq({ :method2 => "{:key=>\"fun\"}\n", method3: "Im method 5\n", :method4 => "[1,\n2,\n3,\n0]\nWhatever!\n", :method5 => "[1, 2, 3, 0]\n", :method6 => "im 5im 4\n" })
+        expect(convert_method_hash result).to eq({ :method2 => "{:key=>\"fun\"}\n", method3: "Im method 7\n", :method4 => "[1,\n2,\n3,\n0]\nWhatever!\n", :method5 => "[1, 2, 3, 0]\n", :method6 => "im 5im 41001\n" })
       end
     end
 
@@ -154,7 +162,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it do
         result = described_class.new(Test, [:method2]).to_hash
 
-        expect(convert_method_hash result).to eq({ method2: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb#L148\nhttps://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb\n" })
+        expect(convert_method_hash result).to eq({ method2: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb#L156\nhttps://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb\n" })
       end
     end
 
@@ -403,12 +411,12 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
         result = described_class.new(Test, [:i_add_stuff]).to_hash
 
         expect(convert_method_hash result).to eq({ :i_add_stuff => <<~TEXT })
-        if false
-        return true
-        end
-        if :true
-        :do_stuff
-        end
+          if false
+          return true
+          end
+          if :true
+          :do_stuff
+          end
         TEXT
       end
     end
@@ -430,7 +438,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
         result = described_class.new(Test, [:i_add_stuff]).to_hash
 
         expect(convert_method_hash result).to eq({ :i_add_stuff => <<~TEXT })
-        1 + 1,000 + 90,111 + 10 + 90,000.9
+          1 + 1,000 + 90,111 + 10 + 90,000.9
         TEXT
       end
     end
