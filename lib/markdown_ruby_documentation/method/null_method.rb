@@ -18,8 +18,11 @@ module MarkdownRubyDocumentation
     end
 
     def context
-      method_reference.to_sym
+      method_reference.constantize
     end
 
+    def context_name
+      method_reference
+    end
   end
 end
