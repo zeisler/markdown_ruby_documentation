@@ -115,6 +115,10 @@ Converts case statements and if statements to bulleted markdown
 #### `readable_ruby_numbers`
 Add commas to any ruby numbers. To provide additional formatting it yields a block given the number object.
 
+#### `hash_to_markdown_table(hash, key_name:, value_name:)`
+
+#### `array_to_markdown_table(array, key_name:)`
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

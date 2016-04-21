@@ -84,7 +84,7 @@ module MarkdownRubyDocumentation
         case (method = Method.create(str, context: ruby_class))
         when ClassMethod
           k = get_context_class(method)
-            k.public_send(method.name)
+          k.public_send(method.name)
         when InstanceMethod
           InstanceToClassMethods.new(method: method).eval_instance_method
         end
@@ -111,7 +111,7 @@ module MarkdownRubyDocumentation
           git_hub_method_url("#{file_path}##{a_method}")
         end
       end
-      
+
       def pretty_code(source_code, humanize: true)
         source_code = ternary_to_if_else(source_code)
         source_code = pretty_early_return(source_code)
@@ -247,6 +247,34 @@ module MarkdownRubyDocumentation
         ruby_source.gsub!(/when(.*)/, "* __When__\\1\n__Then__")
         ruby_source.gsub!("else", "* __Else__")
         ruby_source
+      end
+
+      def hash_to_markdown_table(hash, key_name:, value_name:)
+        key_max_length   = [hash.keys.group_by(&:size).max.first, key_name.size + 1].max
+        value_max_length = [hash.values.group_by(&:size).max.first, value_name.size + 1].max
+        header           = markdown_table_header([[key_name, key_max_length+2], [value_name, value_max_length+2]])
+        rows             = hash.map { |key, value| "| #{key.to_s.ljust(key_max_length)} | #{value.to_s.ljust(value_max_length)}|" }.join("\n")
+        [header, rows].join("\n")
+      end
+
+      def array_to_markdown_table(array, key_name:)
+        key_max_length = [array.group_by(&:size).max.first, key_name.size + 1].max
+        header         = markdown_table_header([[key_name, key_max_length+3]])
+        rows           = array.map { |key| "| #{key.to_s.ljust(key_max_length)} |" }.join("\n")
+        [header, rows].join("\n")
+      end
+
+      def markdown_table_header(array_headers)
+        parts      = array_headers.map do |header, pad_length=0|
+          " #{header.ljust(pad_length-1)}"
+        end
+        bar        = parts.map(&:length).map do |length|
+          ("-" * (length))
+        end.join("|")
+        bar[-1]    = "|"
+        header     = parts.join("|")
+        header[-1] = "|"
+        [("|" + header), ("|" + bar)].join("\n")
       end
 
       private
