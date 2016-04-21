@@ -66,6 +66,14 @@ module MarkdownRubyDocumentation
       end
     end
 
+    def context_name
+      if method_reference.start_with?(type_symbol)
+        @context.name
+      else
+        method_reference.split(type_symbol).first
+      end
+    end
+
     # @return [Symbol]
     def name
       method_reference.split(type_symbol).last.try!(:to_sym)

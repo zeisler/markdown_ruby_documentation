@@ -7,6 +7,7 @@ RSpec.describe MarkdownRubyDocumentation::Method do
     it { expect(subject.context).to eq Kernel }
     it { expect(subject.name).to eq :puts }
     it { expect(subject.to_s).to eq "$puts" }
+    it { expect(subject.context_name).to eq "Kernel" }
     it { expect(subject.to_proc.inspect).to eq("#<UnboundMethod: Kernel#puts>") }
     it { expect(described_class.create("#method_name")).to be_an_instance_of(MarkdownRubyDocumentation::InstanceMethod) }
   end
@@ -24,6 +25,7 @@ RSpec.describe MarkdownRubyDocumentation::Method do
     it { expect(subject.to_proc.inspect).to eq "#<UnboundMethod: FooBar#method_name>" }
     it { expect(subject.name).to eq :method_name }
     it { expect(subject.to_s).to eq "$method_name" }
+    it { expect(subject.context_name).to eq "FooBar" }
     it { expect(described_class.create("#method_name")).to be_an_instance_of(MarkdownRubyDocumentation::InstanceMethod) }
   end
 
@@ -40,6 +42,7 @@ RSpec.describe MarkdownRubyDocumentation::Method do
     it { expect(subject.to_proc.inspect).to eq "#<UnboundMethod: OtherContext#method_name>" }
     it { expect(subject.name).to eq :method_name }
     it { expect(subject.to_s).to eq "OtherContext%method_name" }
+    it { expect(subject.context_name).to eq "OtherContext" }
     it { expect(described_class.create("OtherContext.method_name")).to be_an_instance_of(MarkdownRubyDocumentation::ClassMethod) }
   end
 
@@ -57,6 +60,7 @@ RSpec.describe MarkdownRubyDocumentation::Method do
     it { expect(subject.context).to eq OtherContext::NestedContext }
     it { expect(subject.to_proc.inspect).to eq "#<UnboundMethod: OtherContext::NestedContext#method_name>" }
     it { expect(subject.name).to eq :method_name }
+    it { expect(subject.context_name).to eq "NestedContext" }
     it { expect(subject.to_s).to eq "NestedContext#method_name" }
   end
 
@@ -69,6 +73,7 @@ RSpec.describe MarkdownRubyDocumentation::Method do
     it { expect(subject).to be_an_instance_of(MarkdownRubyDocumentation::NullMethod) }
     it { expect(subject.context).to eq :OtherContext }
     it { expect(subject.name).to eq nil }
+    it { expect(subject.context_name).to eq "Kernel" }
     it { expect{subject.to_proc}.to raise_error("Not convertible to a proc") }
     it { expect(subject.to_s).to eq "OtherContext" }
   end
