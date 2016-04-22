@@ -10,9 +10,14 @@ module MarkdownRubyDocumentation
       erb_methods_class.extend TemplateParser::CommentMacros
       erb_methods_class.extend erb_methods
       TemplateParser::CommentMacros.include erb_methods
-      pages = subjects.map { |subject| Page.new(subject:           subject,
-                                                output_proc:       output_proc,
-                                                erb_methods_class: erb_methods_class).call }
+      left_padding = subjects.map(&:name).group_by(&:size).max.first
+      progressbar = ProgressBar.create(title: "Compiling Markdown".ljust(left_padding), total: subjects.count+ 1)
+      pages       = subjects.map do |subject|
+        progressbar.title = subject.name.ljust(left_padding)
+        Page.new(subject:           subject,
+                 output_proc:       output_proc,
+                 erb_methods_class: erb_methods_class).call.tap { progressbar.increment }
+      end
 
       pages.each_with_object({}) do |page, hash|
         name_parts      = page.subject.name.split("::")
@@ -22,6 +27,8 @@ module MarkdownRubyDocumentation
         hash[namespace].merge!({ name => page })
         hash
       end
+      progressbar.title = "Markdown Documentation Compilation Complete".ljust(left_padding)
+      progressbar.finish
     end
 
     class Page

@@ -61,7 +61,6 @@ module MarkdownRubyDocumentation
     end
 
     module CommentMacros
-
       # @param [String] str
       # @example
       # @return [String] of any comments proceeding a method def
@@ -83,8 +82,7 @@ module MarkdownRubyDocumentation
       def eval_method(str)
         case (method = Method.create(str, context: ruby_class))
         when ClassMethod
-          k = get_context_class(method)
-          k.public_send(method.name)
+          method.context.public_send(method.name)
         when InstanceMethod
           InstanceToClassMethods.new(method: method).eval_instance_method
         end
@@ -99,7 +97,7 @@ module MarkdownRubyDocumentation
 
       def git_hub_method_url(input)
         method = Method.create(input.dup, context: ruby_class)
-        GitHubLink::MethodUrl.new(subject: get_context_class(method), method_object: method)
+        GitHubLink::MethodUrl.new(subject: method.context, method_object: method)
       end
 
       def git_hub_file_url(file_path)
@@ -227,7 +225,7 @@ module MarkdownRubyDocumentation
         ruby_source = ternary_to_if_else(ruby_source)
         ruby_source = ruby_if_statement_to_md(ruby_source)
         ruby_source = ruby_case_statement_to_md(ruby_source)
-        ruby_source = remove_end_keyword(ruby_source)
+        remove_end_keyword(ruby_source)
       end
 
       def remove_end_keyword(ruby_source)
@@ -265,12 +263,8 @@ module MarkdownRubyDocumentation
       end
 
       def markdown_table_header(array_headers)
-        parts      = array_headers.map do |header, pad_length=0|
-          " #{header.ljust(pad_length-1)}"
-        end
-        bar        = parts.map(&:length).map do |length|
-          ("-" * (length))
-        end.join("|")
+        parts      = array_headers.map { |header, pad_length=0| " #{header.ljust(pad_length-1)}" }
+        bar        = parts.map(&:length).map { |length| ("-" * (length)) }.join("|")
         bar[-1]    = "|"
         header     = parts.join("|")
         header[-1] = "|"
@@ -311,14 +305,14 @@ module MarkdownRubyDocumentation
       end
 
       def ruby_class_meth_comment(method)
-        get_context_class(method).public_send(method.type, method.name).comment
+        method.context.public_send(method.type, method.name).comment
 
       rescue MethodSource::SourceNotFoundError => e
-        raise e.class, "#{get_context_class(method)}#{method.type_symbol}#{method.name}, \n#{e.message}"
+        raise e.class, "#{ method.context}#{method.type_symbol}#{method.name}, \n#{e.message}"
       end
 
       def ruby_class_meth_source_location(method)
-        get_context_class(method).public_send(method.type, method.name).source_location
+        method.context.public_send(method.type, method.name).source_location
       end
 
       def extract_dsl_comment(comment_string)
@@ -347,10 +341,6 @@ module MarkdownRubyDocumentation
 
       def ruby_class
         @ruby_class || self
-      end
-
-      def get_context_class(method)
-        method.context
       end
     end
     include CommentMacros
