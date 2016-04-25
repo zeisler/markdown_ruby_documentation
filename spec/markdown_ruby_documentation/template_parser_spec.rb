@@ -191,13 +191,13 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
         class Test
 
           #=mark_doc
-          # <%= pretty_code(print_method_source("#format_me")) %>
+          # <%= pretty_code(print_method_source("#format_me"), ) %>
           def format_me
             return unless true
             return if true
             @memoization ||= if this_thing_works? && true || false
                                :run_the_system_30_day && 1_000
-                               'under_review'
+                               'under_review' + "HomeEquityLineOfCredit"
                              end
             true ? 'eligible' : 'decline'
           end
@@ -216,7 +216,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
           return nothing if true
           if 'This thing works?' and true or false
           'Run the system 30 day' and 1,000
-          'under review'
+          'under review' + "homeequitylineofcredit"
           end
           if true
           'eligible'

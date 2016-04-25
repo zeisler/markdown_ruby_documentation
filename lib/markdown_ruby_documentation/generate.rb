@@ -19,7 +19,7 @@ module MarkdownRubyDocumentation
                  erb_methods_class: erb_methods_class).call.tap { progressbar.increment }
       end
 
-      pages.each_with_object({}) do |page, hash|
+      return_value = pages.each_with_object({}) do |page, hash|
         name_parts      = page.subject.name.split("::")
         name            = name_parts.pop
         namespace       = name_parts.join("::")
@@ -29,6 +29,7 @@ module MarkdownRubyDocumentation
       end
       progressbar.title = "Markdown Documentation Compilation Complete".ljust(left_padding)
       progressbar.finish
+      return_value
     end
 
     class Page
