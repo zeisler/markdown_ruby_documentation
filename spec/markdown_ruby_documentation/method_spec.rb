@@ -65,7 +65,8 @@ RSpec.describe MarkdownRubyDocumentation::Method do
   end
 
   context "when formatted incorrectly" do
-    it { expect { described_class.create("OtherContext::method_name") }.to raise_error(ArgumentError, "method_reference is formatted incorrectly: 'OtherContext::method_name'") }
+    it { expect { described_class.create("OtherContext::method_name") }.to raise_error(MarkdownRubyDocumentation::Method::InvalidMethodReference, "method_reference is formatted incorrectly: 'OtherContext::method_name'") }
+    it { expect { described_class.create("if address.some_where?\n`DO_THING_VALUE => 0.95`\nend") }.to raise_error(MarkdownRubyDocumentation::Method::InvalidMethodReference, "method_reference is formatted incorrectly: 'if address.some_where?\n`DO_THING_VALUE => 0.95`\nend'") }
   end
 
   context "a null method" do

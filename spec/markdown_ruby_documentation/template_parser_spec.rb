@@ -46,47 +46,47 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
     context "eval_method:" do
       let!(:ruby_class) {
         module Nesting
-        class Test
-          SCOPED_CONSTANT_VALUE = "1001"
+          class Test
+            SCOPED_CONSTANT_VALUE = "1001"
 
-          def self.method1
-            { key: "fun" }
-          end
+            def self.method1
+              { key: "fun" }
+            end
 
-          #=mark_doc
-          # <%= eval_method ".method1" %>
-          #=mark_end
-          def method2
-          end
+            #=mark_doc
+            # <%= eval_method ".method1" %>
+            #=mark_end
+            def method2
+            end
 
-          #=mark_doc
-          # <%= eval_method("Test2.method7") %>
-          #=mark_end
-          def method3
-          end
+            #=mark_doc
+            # <%= eval_method("Test2.method7") %>
+            #=mark_end
+            def method3
+            end
 
-          #=mark_doc
-          # <%= print_method_source("Test2#method8") %>
-          # Whatever!
-          #=mark_end
-          def method4
-            "im 4"
-          end
+            #=mark_doc
+            # <%= print_method_source("Test2#method8") %>
+            # Whatever!
+            #=mark_end
+            def method4
+              "im 4"
+            end
 
-          #=mark_doc
-          # <%= eval_method("Test2#method8") %>
-          #=mark_end
-          def method5
-            "im 5" + method4 + SCOPED_CONSTANT_VALUE
-          end
+            #=mark_doc
+            # <%= eval_method("Test2#method8") %>
+            #=mark_end
+            def method5
+              "im 5" + method4 + SCOPED_CONSTANT_VALUE
+            end
 
-          #=mark_doc
-          # <%= eval_method("#method6") %>
-          #=mark_end
-          def method6
-            method5
+            #=mark_doc
+            # <%= eval_method("#method6") %>
+            #=mark_end
+            def method6
+              method5
+            end
           end
-        end
         end
 
         class Test2
@@ -186,96 +186,6 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       end
     end
 
-    context "pretty_code" do
-      let!(:ruby_class) {
-        class Test
-
-          #=mark_doc
-          # <%= pretty_code(print_method_source("#format_me"), ) %>
-          def format_me
-            return unless true
-            return if true
-            @memoization ||= if this_thing_works? && true || false
-                               :run_the_system_30_day && 1_000
-                               'under_review' + "HomeEquityLineOfCredit"
-                             end
-            true ? 'eligible' : 'decline'
-          end
-
-          def this_thing_works?
-
-          end
-        end
-      }
-
-      it "adds comment at the end and parse the whole comment" do
-        result = described_class.new(Test, [:format_me]).to_hash
-
-        expect(convert_method_hash result).to eq({ format_me: <<~TEXT.chomp })
-          return nothing unless true
-          return nothing if true
-          if 'This thing works?' and true or false
-          'Run the system 30 day' and 1,000
-          'under review' + "homeequitylineofcredit"
-          end
-          if true
-          'eligible'
-          else
-          'decline'
-          end
-          [//]: # (This method has no mark_end)
-        TEXT
-      end
-    end
-
-    context "link_local_methods_from_pretty_code" do
-      let!(:ruby_class) {
-        class Test
-
-          #=mark_doc
-          # <%= link_local_methods_from_pretty_code pretty_code(print_method_source("#format_me")) %>
-          def format_me
-            return unless true
-            return if true
-            @memoization ||= if this_thing_works? && true || false || public_1method
-                               :run_the_system_30_day && 1_000
-                               'under_review'
-                             end
-            true ? 'eligible' : 'decline'
-          end
-
-          def public_1method
-
-          end
-
-          private
-
-          def this_thing_works?
-
-          end
-        end
-      }
-
-      it "finds any quoted strings with ticks and converts to a local link" do
-        result = described_class.new(Test, [:format_me]).to_hash
-
-        expect(convert_method_hash result).to eq({ format_me: <<~TEXT.chomp })
-          return nothing unless true
-          return nothing if true
-          if 'This thing works?' and true or false or 'Public 1method'
-          'Run the system 30 day' and 1,000
-          'under review'
-          end
-          if true
-          'eligible'
-          else
-          'decline'
-          end
-          [//]: # (This method has no mark_end)
-        TEXT
-      end
-    end
-
     context "git_hub_file_url" do
       let!(:ruby_class) {
         class Test
@@ -344,13 +254,13 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       end
     end
 
-    context "variables_as_local_links" do
+    context "methods_as_local_links" do
       let!(:ruby_class) {
         class Test
 
           #=mark_doc
-          # <%= variables_as_local_links print_method_source(__method__) %>
-          # <%= variables_as_local_links "* __When__" %>
+          # <%= methods_as_local_links print_method_source(__method__), { call_on_title: false } %>
+          # <%= methods_as_local_links "* __When__" %>
           #=mark_end
           def i_add_stuff
             i_return_one + i_return_two? + "hello"
@@ -369,27 +279,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it "returns the commented method name" do
         result = described_class.new(Test, [:i_add_stuff]).to_hash
 
-        expect(convert_method_hash result).to eq({ :i_add_stuff => "^`i_return_one` + ^`i_return_two?` + \"hello\"\n* __When__\n" })
-      end
-    end
-
-    context "quoted_strings_as_local_links" do
-      let!(:ruby_class) {
-        class Test
-
-          #=mark_doc
-          # <%= quoted_strings_as_local_links(print_method_source(__method__), include: ['I return one Hello', "goodbye"] ) %>
-          #=mark_end
-          def i_add_stuff
-            'I return one Hello' + 'Site x property value' + 'goodbye'
-          end
-        end
-      }
-
-      it "returns the commented method name" do
-        result = described_class.new(Test, [:i_add_stuff]).to_hash
-
-        expect(convert_method_hash result).to eq({ :i_add_stuff => "^`i_return_one_hello` + 'Site x property value' + ^`goodbye`\n" })
+        expect(convert_method_hash result).to eq({ :i_add_stuff => "[i_return_one](#i-return-one) + [i_return_two?](#i-return-two) + \"hello\"\n* __When__\n" })
       end
     end
 
@@ -466,75 +356,222 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it "returns the commented method name" do
         result = described_class.new(Test, [:i_add_stuff]).to_hash
 
-        expect(convert_method_hash result).to eq({ :i_add_stuff => "if true\n`MAX_COMBINED_LIEN_TO_VALUE_RATIO_SAN_DIEGO => 3`\nelse\n`MAX_COMBINED_LIEN_TO_VALUE_RATIO_UCCC => 2`\nend\n" })
+        expect(convert_method_hash result).to eq({ :i_add_stuff => "if true\n[3](#max-combined-lien-to-value-ratio-san-diego)\nelse\n[2](#max-combined-lien-to-value-ratio-uccc)\nend\n" })
       end
     end
 
-    context "ruby_to_markdown" do
-      let!(:ruby_class) {
-        class Test
-          #=mark_doc
-          # <%= ruby_to_markdown print_method_source(__method__) %>
-          #=mark_end
-          def i_add_stuff
-            return if true
-            if true
-              1
-            else
-              2 + :end
+    describe "ruby_to_markdown" do
+
+      context "with print_method_source" do
+        let!(:ruby_class) {
+          class Test
+            #=mark_doc
+            # <%= ruby_to_markdown print_method_source(__method__) %>
+            #=mark_end
+            def i_add_stuff
+              return if true
+              return unless false
+              if true
+                1
+              else
+                2 + :end
+              end
+
+              case
+              when true
+                'unavailable' + this_thing_works?
+              else
+                'eligible' + public_1method
+              end
+
+              case true
+              when true
+                'unavailable'
+              end
             end
 
-            case
-            when true
-              'unavailable' + this_thing_works?
-            else
-              'eligible' + public_1method
+            def public_1method
+
             end
 
-            case true
-            when true
-              'unavailable'
+            private
+
+            def this_thing_works?
+
             end
           end
+        }
 
-          def public_1method
+        it "returns the commented method name" do
+          result = described_class.new(Test, [:i_add_stuff]).to_hash
 
-          end
+          expect(convert_method_hash result).to eq({ :i_add_stuff => <<~TEXT })
+            * __If__ true
+            __Then__
+            return nothing
+            * __Unless__ false
+            __Then__
+            return nothing
+            * __If__ true
+            __Then__
+            1
+            * __Else__
+            2 + :end
 
-          private
+            * __Given__
+            * __When__ true
+            __Then__
+            'unavailable' + [This Thing Works?](#this-thing-works)
+            * __Else__
+            'eligible' + [Public 1method](#public-1method)
 
-          def this_thing_works?
+            * __Given__ true
+            * __When__ true
+            __Then__
+            'unavailable'
 
-          end
+          TEXT
         end
-      }
+      end
 
-      it "returns the commented method name" do
-        result = described_class.new(Test, [:i_add_stuff]).to_hash
+      context "with a method_reference and no reference" do
+        let!(:ruby_class) {
+          class Test
+            #=mark_doc
+            # <%= ruby_to_markdown %>
+            # <%= ruby_to_markdown(method_reference: "#rule_name", methods_as_local_links: { call_on_title: :humanize }) %>
+            #=mark_end
+            def decision_from_rule
+              case
+              when data_unavailable?
+                'unavailable'
+              when declared_bankruptcy_recently?(with_in_years: bankruptcy_allowed_years_ago)
+                'decline'
+              when address.los_angeles_county?
+                'decline'
+              else
+                'eligible'
+              end
+            end
 
-        expect(convert_method_hash result).to eq({ :i_add_stuff => <<~TEXT })
-          * __If__ true
-          __Then__
-          return nothing
-          * __If__ true
-          __Then__
-          1
-          * __Else__
-          2 + :end
+            def data_unavailable?
 
-          * __Given__
-          * __When__ true
-          __Then__
-          'unavailable' + this_thing_works?
-          * __Else__
-          'eligible' + public_1method
+            end
 
-          * __Given__ true
-          * __When__ true
-          __Then__
-          'unavailable'
+            def declared_bankruptcy_recently?(*args)
 
-        TEXT
+            end
+
+            def bankruptcy_allowed_years_ago
+
+            end
+
+            #=mark_doc
+            # <%= ruby_to_markdown %>
+            def rule_name
+              case
+              when address.nil?
+                'bankruptcy_declared'
+              end
+            end
+
+            def address
+            end
+          end
+        }
+
+        it "returns the commented method name" do
+          result = described_class.new(Test, [:decision_from_rule]).to_hash
+
+          expect(convert_method_hash result).to eq({ :decision_from_rule => <<~TEXT })
+            * __Given__
+            * __When__ [Data Unavailable?](#data-unavailable)
+            __Then__
+            'unavailable'
+            * __When__ [Declared Bankruptcy Recently?](#declared-bankruptcy-recently)(with_in_years: [Bankruptcy Allowed Years Ago](#bankruptcy-allowed-years-ago))
+            __Then__
+            'decline'
+            * __When__ [Address](#address) is los_angeles_county?
+            __Then__
+            'decline'
+            * __Else__
+            'eligible'
+
+            * __Given__
+            * __When__ [Address](#address) is missing?
+            __Then__
+            'bankruptcy_declared'
+
+          TEXT
+        end
+      end
+
+      context "ruby_to_markdown with no source" do
+        let!(:ruby_class) {
+          class Test
+            #=mark_doc
+            # <%= ruby_to_markdown(methods_as_local_links: { call_on_title: false })  %>
+            #=mark_end
+            def i_add_stuff
+              return if true
+              if true
+                1
+              else
+                2 + :end
+              end
+
+              case
+              when true
+                'unavailable' && this_thing_works?
+              else
+                'eligible' + public_1method
+              end
+
+              case true
+              when true
+                'unavailable'
+              end
+            end
+
+            def public_1method
+
+            end
+
+            private
+
+            def this_thing_works?
+
+            end
+          end
+        }
+
+        it "returns the commented method name" do
+          result = described_class.new(Test, [:i_add_stuff]).to_hash
+
+          expect(convert_method_hash result).to eq({ :i_add_stuff => <<~TEXT })
+            * __If__ true
+            __Then__
+            return nothing
+            * __If__ true
+            __Then__
+            1
+            * __Else__
+            2 + :end
+
+            * __Given__
+            * __When__ true
+            __Then__
+            'unavailable' and [this_thing_works?](#this-thing-works)
+            * __Else__
+            'eligible' + [public_1method](#public-1method)
+
+            * __Given__ true
+            * __When__ true
+            __Then__
+            'unavailable'
+
+          TEXT
+        end
       end
     end
   end

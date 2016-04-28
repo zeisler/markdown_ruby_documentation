@@ -14,16 +14,7 @@ module MarkdownRubyDocumentation
       interface
     end
 
-    private
-
-    def constants
-      subject.constants.each_with_object({}) do |v, const|
-        c        = subject.const_get(v)
-        const[v] = format(c) unless c.class == Module || c.class == Class
-      end
-    end
-
-    def format(value)
+    def self.format(value)
       case value
       when Fixnum
         ActiveSupport::NumberHelper.number_to_delimited(value)
@@ -34,5 +25,13 @@ module MarkdownRubyDocumentation
       end
     end
 
+    private
+
+    def constants
+      subject.constants.each_with_object({}) do |v, const|
+        c        = subject.const_get(v)
+        const[v] = self.class.format(c) unless c.class == Module || c.class == Class
+      end
+    end
   end
 end

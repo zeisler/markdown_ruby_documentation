@@ -1,5 +1,6 @@
 module MarkdownRubyDocumentation
   class Method
+    InvalidMethodReference = Class.new(StandardError)
     attr_reader :method_reference
     protected :method_reference
 
@@ -15,6 +16,7 @@ module MarkdownRubyDocumentation
     #   "SomeClass#instance_method_name" an instance method on a specific constant.
     #   "#instance_method_name" an instance method in the current scope.
     def self.create(method_reference, null_method: false, context: Kernel)
+      return method_reference if method_reference.is_a?(Method)
       case method_reference
       when InstanceMethod
         InstanceMethod.new(method_reference, context: context)
@@ -24,7 +26,7 @@ module MarkdownRubyDocumentation
         if null_method
           NullMethod.new(method_reference, context: context)
         else
-          raise ArgumentError, "method_reference is formatted incorrectly: '#{method_reference}'"
+          raise InvalidMethodReference, "method_reference is formatted incorrectly: '#{method_reference}'"
         end
       end
     end
@@ -41,7 +43,7 @@ module MarkdownRubyDocumentation
 
     def self.===(value)
       if value.is_a?(String)
-        value.include?(type_symbol)
+        value.include?(type_symbol) && !!/\A[:A-Za-z_0-9!?#{type_symbol}]+\z/.match(value)
       else
         super
       end

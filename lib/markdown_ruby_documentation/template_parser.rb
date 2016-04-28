@@ -44,14 +44,16 @@ module MarkdownRubyDocumentation
       using
     )
 
-    attr_reader :ruby_class, :methods, :erb_methods_class
+    attr_reader :ruby_class, :methods, :erb_methods_class, :current_method
 
     def parser
       @parser ||= methods.each_with_object({}) do |method, hash|
         begin
-          value = parse_erb(insert_method_name(strip_comment_hash(extract_dsl_comment_from_method(method)), method), method)
+          @current_method = method
+          value           = parse_erb(insert_method_name(strip_comment_hash(extract_dsl_comment_from_method(method)), method), method)
         rescue MethodSource::SourceNotFoundError => e
-          value = false
+          @current_method = nil
+          value           = false
           puts e.message unless IGNORE_METHODS.any? { |im| e.message.include? im }
         end
         if value
@@ -61,6 +63,8 @@ module MarkdownRubyDocumentation
     end
 
     module CommentMacros
+      include Parsing
+
       # @param [String] str
       # @example
       # @return [String] of any comments proceeding a method def
@@ -79,7 +83,7 @@ module MarkdownRubyDocumentation
       # @param [String] str
       # @example
       # @return [Object] anything that the evaluated method would return.
-      def eval_method(str)
+      def eval_method(str=current_method)
         case (method = Method.create(str, context: ruby_class))
         when ClassMethod
           method.context.public_send(method.name)
@@ -88,72 +92,105 @@ module MarkdownRubyDocumentation
         end
       end
 
-      # @param [String] input
+      # @param [String] method_reference
       # @return [String] the source of a method block is returned as text.
-      def print_method_source(input)
-        method = Method.create(input.dup, context: ruby_class)
+      def print_method_source(method_reference=current_method)
+        method = Method.create(method_reference.dup, context: ruby_class)
         PrintMethodSource.new(method: method).print
       end
 
-      def git_hub_method_url(input)
-        method = Method.create(input.dup, context: ruby_class)
+
+      # @param [String] method_reference
+      def git_hub_method_url(method_reference=current_method)
+        method = Method.create(method_reference.dup, context: ruby_class)
         GitHubLink::MethodUrl.new(subject: method.context, method_object: method)
       end
 
-      def git_hub_file_url(file_path)
-        if file_path.include?("/")
-          GitHubLink::FileUrl.new(file_path: file_path)
+      def git_hub_file_url(file_path_or_const)
+        if file_path_or_const.include?("/")
+          GitHubLink::FileUrl.new(file_path: file_path_or_const)
         else
-          const    = Object.const_get(file_path)
+          const    = Object.const_get(file_path_or_const)
           a_method = const.public_instance_methods.first
-          git_hub_method_url("#{file_path}##{a_method}")
+          git_hub_method_url("#{file_path_or_const}##{a_method}")
         end
       end
 
-      def pretty_code(source_code, humanize: true)
-        source_code = ternary_to_if_else(source_code)
-        source_code = pretty_early_return(source_code)
-        source_code.gsub!(/@[a-z][a-z0-9_]+ \|\|=?\s/, "") # @memoized_vars ||=
-        source_code.gsub!(":", '')
-        source_code.gsub!("&&", "and")
-        source_code.gsub!(">=", "is greater than or equal to")
-        source_code.gsub!("<=", "is less than or equal to")
-        source_code.gsub!(" < ", " is less than ")
-        source_code.gsub!(" > ", " is greater than ")
-        source_code.gsub!(" == ", " Equal to ")
-        source_code.gsub!("nil?", "is missing?")
-        source_code.gsub!("elsif", "else if")
-        source_code.gsub!("||", "or")
-        source_code.gsub!(/([0-9][0-9_]+[0-9]+)/) do |match|
-          match.gsub("_", ",")
+      RUBY_TO_MARKDOWN_PROCESSORS = [
+        :readable_ruby_numbers,
+        :pretty_early_return,
+        :convert_early_return_to_if_else,
+        :ternary_to_if_else,
+        :ruby_if_statement_to_md,
+        :ruby_case_statement_to_md,
+        :ruby_operators_to_english,
+        :nil_check_readable,
+        :question_mark_method_format,
+        :methods_as_local_links,
+        :remove_end_keyword,
+        :constants_with_name_and_value,
+        :remove_memoized_vars,
+      ]
+
+      def ruby_to_markdown(*args)
+        any_args           = AnyArgs.new(args:                args,
+                                         print_method_source: method(:print_method_source),
+                                         caller:              caller,
+                                         for_method:          __method__,
+                                         method_creator:      method(:create_method_with_ruby_class))
+        disable_processors = any_args.disable_processors
+        ruby_source        = any_args.source_code
+
+        RUBY_TO_MARKDOWN_PROCESSORS.each do |processor|
+          options     = disable_processors.fetch(processor, {})
+          ruby_source = send(processor, ruby_source, options) if options
         end
-        if humanize
-          source_code.gsub!(/["']?[a-z_A-Z?!0-9]*["']?/) do |s|
-            if s.include?("_") && !(/["'][a-z_A-Z?!0-9]*["']/ =~ s)
-              "'#{s.humanize}'"
-            else
-              s.humanize(capitalize: false)
-            end
-          end
-        end
-        source_code
+        ruby_source
       end
 
-      def readable_ruby_numbers(source_code, &block)
+      def remove_memoized_vars(source_code=print_method_source, *)
+        source_code.gsub(/@[a-z][a-z0-9_]+ \|\|=?\s/, "") # @memoized_vars ||=
+      end
+
+      def nil_check_readable(source_code, proc: false)
+        conversions = {
+          ".nil?" => " is missing?"
+        }
+        gsub_replacement(source_code, conversions, proc: proc)
+      end
+
+      def elsif_to_else_if(source_code, proc: false)
+        conversions = {
+          "elsif" => "else if"
+        }
+        gsub_replacement(source_code, conversions, proc: proc)
+      end
+
+      def remove_colons(source_code)
+        source_code.gsub(":", '')
+      end
+
+      def ruby_operators_to_english(source_code, proc: false)
+        conversions = {
+          "&&"   => "and",
+          ">="   => "is greater than or equal to",
+          "<="   => "is less than or equal to",
+          " < "  => " is less than ",
+          " > "  => " is greater than ",
+          " == " => " Equal to ",
+          "||"   => "or"
+        }
+
+        gsub_replacement(source_code, conversions, proc: proc)
+      end
+
+      def readable_ruby_numbers(source_code, *, &block)
         source_code.gsub(/([0-9][0-9_]+[0-9]+)/) do |match|
           value = eval(match)
           if block_given?
             block.call(value)
           else
             ActiveSupport::NumberHelper.number_to_delimited(value)
-          end
-        end
-      end
-
-      def link_local_methods_from_pretty_code(pretty_code, include: nil)
-        pretty_code.gsub(/([`][a-zA-Z_0-9!?\s]+[`])/) do |match|
-          include_code(include, match) do
-            variables_as_local_links match.underscore.gsub(" ", "_").gsub(/`/, "")
           end
         end
       end
@@ -168,24 +205,32 @@ module MarkdownRubyDocumentation
 
       private :include_code
 
-      def convert_early_return_to_if_else(source_code)
-        source_code.gsub(/(.+) if (.+)/, "if \\2\n\\1\nend")
+      def convert_early_return_to_if_else(source_code, *)
+        source_code = source_code.gsub(/(.+) if (.+)/, "if \\2\n\\1\nend")
+        source_code.gsub(/(.+) unless (.+)/, "unless \\2\n\\1\nend")
       end
 
-      def pretty_early_return(source_code)
+      def pretty_early_return(source_code, *)
         source_code.gsub(/return (unless|if)/, 'return nothing \1')
       end
 
-      def ternary_to_if_else(ternary)
+      def ternary_to_if_else(ternary, *)
         ternary.gsub(/(.*) \? (.*) \: (.*)/, "if \\1\n\\2\nelse\n\\3\nend")
       end
 
+      # @param [String] title the name of the link
+      # @param [String] link_ref the url with method anchor
+      # @example format_link("MyLink", "path/to/it#method_name?")
+      #   #=> "[MyLink](#path/to/it#method-name)"
       def format_link(title, link_ref)
         path, anchor   = *link_ref.to_s.split("#")
         formatted_path = [path, anchor.try!(:dasherize).try!(:delete, "?")].compact.join("#")
         "[#{title}](#{formatted_path})"
       end
 
+      # @param [String] link_ref the url with method anchor
+      # @example title_from_link"path/to/it#method_name?")
+      #   #=> "[Method Name](#path/to/it#method-name)"
       def title_from_link(link_ref)
         [link_ref.split("/").last.split("#").last.to_s.humanize, link_ref]
       end
@@ -195,56 +240,60 @@ module MarkdownRubyDocumentation
         raise "Client needs to define MarkdownRubyDocumentation::TemplateParser::CommentMacros#link_to_markdown"
       end
 
-      def method_as_local_links(ruby_source)
+      def methods_as_local_links(ruby_source,
+                                 call_on_title: :titleize,
+                                 proc:          -> (match, anchor) { "[#{match}](#{anchor})" })
         ruby_source.gsub(/(\b(?<!['"])[a-z_][a-z_0-9?!]*(?!['"]))/) do |match|
-          is_a_method_on_ruby_class?(match) ? "^`#{match}`" : match
-        end
-      end
+          if is_a_method_on_ruby_class?(match)
 
-      alias_method(:variables_as_local_links, :method_as_local_links)
-
-      def quoted_strings_as_local_links(text, include: nil)
-        text.gsub(/(['|"][a-zA-Z_0-9!?\s]+['|"])/) do |match|
-          include_code(include, match) do
-            "^`#{remove_quotes(match).underscore.gsub(" ", "_")}`"
+            title = if call_on_title
+                      call_on_title = [*call_on_title].compact
+                      match.public_send(call_on_title.first, *call_on_title[1..-1])
+                    else
+                      match
+                    end
+            proc.call(title, "##{match.downcase.dasherize.delete(" ").delete('?')}")
+          else
+            match
           end
         end
       end
 
-      def constants_with_name_and_value(ruby_source)
+      def constants_with_name_and_value(ruby_source, *)
         ruby_source.gsub(/([A-Z]+[A-Z_0-9]+)/) do |match|
           value = ruby_class.const_get(match)
-          "`#{match} => #{value.inspect}`"
+          "[#{ConstantsPresenter.format(value)}](##{match.dasherize.downcase})"
         end
       end
 
-      def ruby_to_markdown(ruby_source)
-        ruby_source = readable_ruby_numbers(ruby_source)
-        ruby_source = pretty_early_return(ruby_source)
-        ruby_source = convert_early_return_to_if_else(ruby_source)
-        ruby_source = ternary_to_if_else(ruby_source)
-        ruby_source = ruby_if_statement_to_md(ruby_source)
-        ruby_source = ruby_case_statement_to_md(ruby_source)
-        remove_end_keyword(ruby_source)
+      def question_mark_method_format(ruby_source, *)
+        ruby_source.gsub(/(\b(?<!['"])\.[a-z_][a-z_0-9]+\?(?!['"]))/) do |match|
+          " is #{match}".sub(".", "")
+        end
       end
 
-      def remove_end_keyword(ruby_source)
-        ruby_source.gsub!(/^[\s]*end\n?/, "")
+      def remove_end_keyword(ruby_source, *)
+        ruby_source.gsub(/^[\s]*end\n?/, "")
       end
 
-      def ruby_if_statement_to_md(ruby_source)
-        ruby_source.gsub!(/else if(.*)/, "* __ElseIf__\\1\n__Then__")
-        ruby_source.gsub!(/elsif(.*)/, "* __ElseIf__\\1\n__Then__")
-        ruby_source.gsub!(/if(.*)/, "* __If__\\1\n__Then__")
-        ruby_source.gsub!("else", "* __Else__")
-        ruby_source
+      def ruby_if_statement_to_md(ruby_source, proc: false)
+        conversions = {
+          /else if(.*)/ => "* __ElseIf__\\1\n__Then__",
+          /elsif(.*)/   => "* __ElseIf__\\1\n__Then__",
+          /if(.*)/      => "* __If__\\1\n__Then__",
+          /unless(.*)/  => "* __Unless__\\1\n__Then__",
+          "else"        => "* __Else__"
+        }
+        gsub_replacement(ruby_source, conversions, proc: proc)
       end
 
-      def ruby_case_statement_to_md(ruby_source)
-        ruby_source.gsub!(/case(.*)/, "* __Given__\\1")
-        ruby_source.gsub!(/when(.*)/, "* __When__\\1\n__Then__")
-        ruby_source.gsub!("else", "* __Else__")
-        ruby_source
+      def ruby_case_statement_to_md(ruby_source, proc: false)
+        conversions = {
+          /case(.*)/ => "* __Given__\\1",
+          /when(.*)/ => "* __When__\\1\n__Then__",
+          "else"     => "* __Else__"
+        }
+        gsub_replacement(ruby_source, conversions, proc: proc)
       end
 
       def hash_to_markdown_table(hash, key_name:, value_name:)
@@ -273,6 +322,25 @@ module MarkdownRubyDocumentation
 
       private
 
+      def fetch_strings(source_code, &block)
+        source_code.gsub(/["']?[a-z_A-Z?!0-9]*["']?/, &block)
+      end
+
+      def fetch_strings_that_contain_codes(source_code, &block)
+        source_code.gsub(/["']?[a-z_A-Z?!0-9]*["']?/, &block)
+      end
+
+      def fetch_methods(source_code, &block)
+        source_code.gsub(/(\b(?<!['"])[a-z_][a-z_0-9?!]*(?!['"]))/) do |match|
+          block.call(match) if is_a_method_on_ruby_class?(match)
+        end
+      end
+
+      def fetch_symbols(source_code, &block)
+        source_code = source_code.gsub(/:[a-z_?!0-9]+/, &block)
+        source_code = source_code.gsub(/[a-z_?!0-9]+:/, &block)
+      end
+
       def is_a_method_on_ruby_class?(method)
         [*ruby_class.public_instance_methods, *ruby_class.private_instance_methods].include?(remove_quotes(method).to_sym)
       end
@@ -281,68 +349,26 @@ module MarkdownRubyDocumentation
         string.gsub(/['|"]/, "")
       end
 
-      def insert_method_name(string, method)
-        string.gsub("__method__", "'#{method.to_s}'")
-      end
-
-      def parse_erb(str, method)
-        filename, lineno = ruby_class_meth_source_location(method)
-
-        ruby_class.module_eval(<<-RUBY, __FILE__, __LINE__+1)
-        def self.get_binding
-          self.send(:binding)
-        end
-        RUBY
-        ruby_class.extend(CommentMacros)
-        erb = ERB.new(str, nil, "-")
-        erb.result(ruby_class.get_binding)
-      rescue => e
-        raise e.class, e.message, ["#{filename}:#{lineno}:in `#{method.name}'", *e.backtrace]
-      end
-
-      def strip_comment_hash(str)
-        str.gsub(/^#[\s]?/, "")
-      end
-
-      def ruby_class_meth_comment(method)
-        method.context.public_send(method.type, method.name).comment
-
-      rescue MethodSource::SourceNotFoundError => e
-        raise e.class, "#{ method.context}#{method.type_symbol}#{method.name}, \n#{e.message}"
-      end
-
-      def ruby_class_meth_source_location(method)
-        method.context.public_send(method.type, method.name).source_location
-      end
-
-      def extract_dsl_comment(comment_string)
-        if (v = when_start_and_end(comment_string))
-          v
-        elsif (x = when_only_start(comment_string))
-          x << "[//]: # (This method has no mark_end)"
-        else
-          ""
-        end
-      end
-
-      def when_start_and_end(comment_string)
-        v = /#{START_TOKEN}\n((.|\n)*)#{END_TOKEN}/.match(comment_string)
-        v.try!(:captures).try!(:first)
-      end
-
-      def when_only_start(comment_string)
-        v = /#{START_TOKEN}\n((.|\n)*)/.match(comment_string)
-        v.try!(:captures).try!(:first)
-      end
-
-      def extract_dsl_comment_from_method(method)
-        extract_dsl_comment strip_comment_hash(ruby_class_meth_comment(method))
-      end
-
       def ruby_class
         @ruby_class || self
       end
+
+      def create_method_with_ruby_class(method_reference)
+        Method.create(method_reference, context: ruby_class)
+      end
+
+      def gsub_replacement(source_code, conversions, proc: false)
+        conversions.each do |symbol, replacement|
+          source_code = if proc
+                          source_code.gsub(symbol, &proc.curry[replacement])
+                        else
+                          source_code.gsub(symbol, replacement)
+                        end
+        end
+        source_code
+      end
     end
+
     include CommentMacros
   end
 end

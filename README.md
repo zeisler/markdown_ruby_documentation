@@ -86,11 +86,29 @@ Creates a url to the file on GitHub based on the current sha or it defaults to m
 * "#instance_method_name" an instance method in the current scope.
     * `__method__` returns `#<current_method_name>`
 
-#### `pretty_code(ruby_source)`
-Convert underscore methods to more English like sentence.
+#### `ruby_to_markdown`
+Converts case statements and if statements to bulleted markdown
+ **option 1**
+   * param [String] ruby_source
+   * param [Hash] disable_processors (optional) See processors list.
+   *example ruby_to_markdown "def method_name\n'hello'\nend", readable_ruby_numbers: false**
+ **option 2 - Assumes methods source of current method**
+   * param [Hash] disable_processors (optional) See processors list.
+   *example ruby_to_markdown readable_ruby_numbers: false*
+   
+**processors**
+* readable_ruby_numbers
+* pretty_early_return
+* convert_early_return_to_if_else
+* ternary_to_if_else
+* ruby_if_statement_to_md
+* ruby_case_statement_to_md
+* ruby_operators_to_english
+* methods_as_local_links
+* remove_end_keyword
+* constants_with_name_and_value
+* remove_memoized_vars
 
-#### `link_local_methods_from_pretty_code(pretty_code, include: <Optional array of matching strings>)`
-link_local_methods_from_pretty_code("`hello i am a method`") => "[hello i am a method](#hello-i-am-a-method)"
 
 #### `format_link`
 format_link "#i_do_other_things" => [I do other things](#i-do-other-things)
@@ -98,17 +116,11 @@ format_link "The method 10", "#i_do_other_things" => [The method 10](#i-do-other
 
 Instance method that call other methods will results in an error.
 
-#### `method_as_local_links`
-method_as_local_links("i_return_one + i_return_two") => "^`i_return_one` + ^`i_return_two`"
+#### `methods_as_local_links`
+methods_as_local_links("i_return_one + i_return_two") => "^`i_return_one` + ^`i_return_two`"
 
 #### `constants_with_name_and_value`
 constants_with_name_and_value("SOME_CONST_VALUE") => "`SOME_CONST_VALUE => "1"`"
-
-#### `quoted_strings_as_local_links(text, include: <Optional array of matching strings>)`
-quoted_strings_as_local_links('"this is Bob"') => "^`the_is_bob`"
-
-#### `ruby_to_markdown`
-Converts case statements and if statements to bulleted markdown
 
 #### `readable_ruby_numbers`
 Add commas to any ruby numbers. To provide additional formatting it yields a block given the number object.
