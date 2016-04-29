@@ -1,11 +1,12 @@
 module MarkdownRubyDocumentation
   class WriteMarkdownToDisk
 
-    attr_reader :dir, :skip_if_blank
+    attr_reader :dir, :skip_if_blank, :relative_dir
 
-    def initialize(dir:, skip_if_blank: false)
+    def initialize(dir:, skip_if_blank: false, relative_dir:)
       @dir           = dir
       @skip_if_blank = skip_if_blank
+      @relative_dir = relative_dir
     end
 
     def call(name:, text:)

@@ -13,6 +13,14 @@ module MarkdownRubyDocumentation
           method
         end
 
+        ruby_class.send(:define_singleton_method, :output_object) do
+          output_object
+        end
+
+        ruby_class.send(:define_singleton_method, :load_path) do
+          load_path
+        end
+
         ruby_class.extend(CommentMacros)
 
         erb          = ERB.new(str, nil, "-")

@@ -2,24 +2,31 @@ module MarkdownRubyDocumentation
   class Generate
     # @param [Class] subjects ruby classes to generate documentation from.
     # @param [Module] erb_methods must contain #link_to_markdown and contain any additional methods for comment ERB
-    # @param [Proc] output_proc given name: and text: for use in saving the the files.
+    # @param [Proc] output_object given name: and text: for use in saving the the files.
+    # @param [String] load_path
     def self.run(
-      subjects:, erb_methods: DefaultErbMethods, output_proc: -> (name:, text:) { { name => text } }
+      subjects:,
+        erb_methods: DefaultErbMethods,
+        output_object:,
+        load_path:
     )
-      erb_methods_class = Class.new
+      self.output_object = output_object
+      self.load_path     = load_path
+      erb_methods_class  = Class.new
       erb_methods_class.extend TemplateParser::CommentMacros
       erb_methods_class.extend erb_methods
       TemplateParser::CommentMacros.include erb_methods
       left_padding = subjects.map(&:name).group_by(&:size).max.first
-      progressbar = ProgressBar.create(title: "Compiling Markdown".ljust(left_padding), total: subjects.count+ 1)
-      pages       = subjects.map do |subject|
+      progressbar  = ProgressBar.create(title: "Compiling Markdown".ljust(left_padding), total: subjects.count+ 1)
+      pages        = subjects.map do |subject|
         progressbar.title = subject.name.ljust(left_padding)
         Page.new(subject:           subject,
-                 output_proc:       output_proc,
-                 erb_methods_class: erb_methods_class).call.tap { progressbar.increment }
+                 output_object:     output_object,
+                 erb_methods_class: erb_methods_class,
+                 load_path:         load_path).call.tap { progressbar.increment }
       end
 
-      return_value = pages.each_with_object({}) do |page, hash|
+      return_value      = pages.each_with_object({}) do |page, hash|
         name_parts      = page.subject.name.split("::")
         name            = name_parts.pop
         namespace       = name_parts.join("::")
@@ -32,26 +39,32 @@ module MarkdownRubyDocumentation
       return_value
     end
 
+    class << self
+      attr_accessor :load_path, :output_object
+    end
+
     class Page
-      attr_reader :subject, :output_proc, :erb_methods_class
+      attr_reader :subject, :output_object, :erb_methods_class, :load_path
 
       def initialize(subject:,
                      methods: [],
-                     output_proc:,
+                     load_path:,
+                     output_object:,
                      erb_methods_class:)
         initialize_methods(methods, subject)
         @erb_methods_class = erb_methods_class
         @subject           = subject
         methods            = methods
         @methods           = methods
-        @output_proc       = output_proc
+        @load_path         = load_path
+        @output_object     = output_object
       end
 
       def call
         methods_pipes = run_pipeline(methods_pipeline)
         text          = run_pipeline(string_pipeline, methods_pipes)
-        output_proc.call(name: subject.name,
-                         text: text)
+        output_object.call(name: subject.name,
+                           text: text)
         self
       end
 

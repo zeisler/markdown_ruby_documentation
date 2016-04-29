@@ -44,7 +44,7 @@ module MarkdownRubyDocumentation
       using
     )
 
-    attr_reader :ruby_class, :methods, :erb_methods_class, :current_method
+    attr_reader :ruby_class, :methods, :erb_methods_class, :current_method, :output_object, :load_path
 
     def parser
       @parser ||= methods.each_with_object({}) do |method, hash|
@@ -64,7 +64,7 @@ module MarkdownRubyDocumentation
 
     module CommentMacros
       include Parsing
-
+      attr_accessor :output_object
       # @param [String] str
       # @example
       # @return [String] of any comments proceeding a method def
@@ -184,26 +184,11 @@ module MarkdownRubyDocumentation
         gsub_replacement(source_code, conversions, proc: proc)
       end
 
-      def readable_ruby_numbers(source_code, *, &block)
+      def readable_ruby_numbers(source_code, proc: -> (value) { ActiveSupport::NumberHelper.number_to_delimited(value) })
         source_code.gsub(/([0-9][0-9_]+[0-9]+)/) do |match|
-          value = eval(match)
-          if block_given?
-            block.call(value)
-          else
-            ActiveSupport::NumberHelper.number_to_delimited(value)
-          end
+          proc.call(eval(match))
         end
       end
-
-      def include_code(include, text, &do_action)
-        if include.nil? || (include.present? && include.include?(remove_quotes(text)))
-          do_action.call(text)
-        else
-          text
-        end
-      end
-
-      private :include_code
 
       def convert_early_return_to_if_else(source_code, *)
         source_code = source_code.gsub(/(.+) if (.+)/, "if \\2\n\\1\nend")
@@ -235,24 +220,110 @@ module MarkdownRubyDocumentation
         [link_ref.split("/").last.split("#").last.to_s.humanize, link_ref]
       end
 
-      def link_to_markdown(klass, title:)
-        return super if defined? super
-        raise "Client needs to define MarkdownRubyDocumentation::TemplateParser::CommentMacros#link_to_markdown"
+      UnimplementedMethod = Class.new(StandardError)
+      # @param [Class, String, Pathname] klass_or_path
+      #   1. String or Class representing a method reference
+      #   2. Pathname representing the full path of the file location a method is defined
+      # @param [String] title is the link display value
+      # @return [String, Symbol] Creates link to a given generated markdown file or returns :non_project_location message.
+      #   1. "[title](path/to/markdown/file.md#method-name)"
+      #   2. :non_project_location
+      def link_to_markdown(klass_or_path, title:, _ruby_class: ruby_class)
+        if klass_or_path.is_a?(String) || klass_or_path.is_a?(Class) || klass_or_path.is_a?(Module)
+          link_to_markdown_method_reference(method_reference: klass_or_path, title: title, ruby_class: _ruby_class)
+        elsif klass_or_path.is_a?(Pathname)
+          link_to_markdown_full_path(path: klass_or_path, title: title, ruby_class: _ruby_class)
+        else
+          raise ArgumentError, "invalid first arg given: #{klass_or_path} for #{__method__}"
+        end
+      end
+
+      def link_to_markdown_method_reference(method_reference:, title:, ruby_class:)
+        method = MarkdownRubyDocumentation::Method.create(method_reference, null_method: true, context: ruby_class)
+        parts  = method.context_name.to_s.split("::").reject(&:blank?)
+        path   = parts.map { |p| p.underscore }.join("/")
+        path   = "#{path}.md#{method.type_symbol}#{method.name}"
+        format_link title, MarkdownRubyDocumentation::GitHubLink::FileUrl.new(file_path: File.join(MarkdownRubyDocumentation::Generate.output_object.relative_dir, path)).to_s
+      end
+
+      def link_to_markdown_full_path(path:, title:, ruby_class:)
+        if path.to_s.include?(MarkdownRubyDocumentation::Generate.load_path)
+          relative_path    = path.to_s.gsub(MarkdownRubyDocumentation::Generate.load_path, "")
+          const_nest, meth = relative_path.split("#")
+          const            = const_nest.split("/").map(&:camelize).join("::")
+          link_to_markdown_method_reference(method_reference: "#{const.gsub(".rb", "")}##{meth}", title: title, ruby_class: ruby_class)
+        else
+          :non_project_location
+        end
+      end
+
+      class MethodLink
+        RUBY_METHOD_REGEX = /(\b(?<!['"])[a-z_][a-z_0-9?!]*(?!['"]))/.freeze
+
+        def initialize(match:,
+                       call_on_title: :titleize,
+                       method_to_class: {},
+                       link_to_markdown:,
+                       ruby_class:)
+          @match            = match
+          @ruby_class       = ruby_class
+          @call_on_title    = call_on_title
+          @method_to_class  = method_to_class
+          @link_to_markdown = link_to_markdown
+        end
+
+        def link
+          if constant_override
+            constant_override_method_path
+          else
+            link = link_to_markdown.call(method_path, title: title)
+            if link == :non_project_location
+              match
+            else
+              link
+            end
+          end
+        rescue UnimplementedMethod => e
+          "[#{title}](##{match.downcase.dasherize.delete(" ").delete('?')})"
+        end
+
+        private
+
+        attr_reader :match, :ruby_class, :call_on_title, :method_to_class, :link_to_markdown
+
+        def title
+          @title ||= if call_on_title
+                       @call_on_title = [*call_on_title].compact
+                       match.public_send(call_on_title.first, *call_on_title[1..-1])
+                     else
+                       match
+                     end
+        end
+
+        def constant_override
+          @constant_override ||= method_to_class[match.to_sym]
+        end
+
+        def method_path
+          Pathname(Method.create("##{match}", context: ruby_class).to_proc.source_location.first+"##{match}")
+        end
+
+        def constant_override_method_path
+          method_object = Method.create("##{match}", context: constant_override)
+          link_to_markdown.call("#{method_object.context.name}##{method_object.name}", title: title)
+        end
       end
 
       def methods_as_local_links(ruby_source,
                                  call_on_title: :titleize,
-                                 proc:          -> (match, anchor) { "[#{match}](#{anchor})" })
-        ruby_source.gsub(/(\b(?<!['"])[a-z_][a-z_0-9?!]*(?!['"]))/) do |match|
+                                 method_to_class: {})
+        ruby_source.gsub(MethodLink::RUBY_METHOD_REGEX) do |match|
           if is_a_method_on_ruby_class?(match)
-
-            title = if call_on_title
-                      call_on_title = [*call_on_title].compact
-                      match.public_send(call_on_title.first, *call_on_title[1..-1])
-                    else
-                      match
-                    end
-            proc.call(title, "##{match.downcase.dasherize.delete(" ").delete('?')}")
+            MethodLink.new(match:            match,
+                           ruby_class:       ruby_class,
+                           call_on_title:    call_on_title,
+                           method_to_class:  method_to_class,
+                           link_to_markdown: method(:link_to_markdown)).link
           else
             match
           end
@@ -278,8 +349,8 @@ module MarkdownRubyDocumentation
 
       def ruby_if_statement_to_md(ruby_source, proc: false)
         conversions = {
-          /else if(.*)/ => "* __ElseIf__\\1\n__Then__",
-          /elsif(.*)/   => "* __ElseIf__\\1\n__Then__",
+          /else if(.*)/ => "* __Else If__\\1\n__Then__",
+          /elsif(.*)/   => "* __Else If__\\1\n__Then__",
           /if(.*)/      => "* __If__\\1\n__Then__",
           /unless(.*)/  => "* __Unless__\\1\n__Then__",
           "else"        => "* __Else__"

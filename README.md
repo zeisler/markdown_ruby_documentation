@@ -40,7 +40,7 @@ html_generator  = MarkdownRubyDocumentation::HtmlGenerator.new(
 
 MarkdownRubyDocumentation::Generate.run(
   subjects:     [RubyClassToBeInspected], 
-  output_proc:  html_generator
+  output_object:  html_generator
 ).call
 ```
 
@@ -94,7 +94,8 @@ Converts case statements and if statements to bulleted markdown
    *example ruby_to_markdown "def method_name\n'hello'\nend", readable_ruby_numbers: false**
  **option 2 - Assumes methods source of current method**
    * param [Hash] disable_processors (optional) See processors list.
-   *example ruby_to_markdown readable_ruby_numbers: false*
+   `example ruby_to_markdown(readable_ruby_numbers: false)`
+   `example ruby_to_markdown(ruby_operators_to_english: { proc: ->(replacement, match) { "do some alteration" }})`
    
 **processors**
 * readable_ruby_numbers
@@ -103,8 +104,9 @@ Converts case statements and if statements to bulleted markdown
 * ternary_to_if_else
 * ruby_if_statement_to_md
 * ruby_case_statement_to_md
-* ruby_operators_to_english
-* methods_as_local_links
+* ruby_operators_to_english, options: proc(replacement, match)
+* methods_as_local_links, options: method_to_class: { method_name => OwningConstant }
+* question_mark_method_format
 * remove_end_keyword
 * constants_with_name_and_value
 * remove_memoized_vars

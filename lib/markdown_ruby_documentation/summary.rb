@@ -9,12 +9,12 @@ class Summary
   def title
     ancestors = subject.ancestors.select do |klass|
       klass.is_a?(Class) && ![BasicObject, Object, subject].include?(klass)
-    end
+    end.sort_by { |klass| klass.name }
     [format_class(subject), *ancestors.map { |a| create_link(a) }].join(" < ")
   end
 
   def summary
-    descendants = ObjectSpace.each_object(Class).select { |klass| klass < subject && !klass.name.include?("InstanceToClassMethods") }
+    descendants = ObjectSpace.each_object(Class).select { |klass| klass < subject && !klass.name.include?("InstanceToClassMethods") }.sort_by { |klass| klass.name }
 
     descendants_links = descendants.map { |d| create_link(d) }.join(", ")
     "Descendants: #{descendants_links}" if descendants.count >= 1

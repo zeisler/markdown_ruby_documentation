@@ -50,21 +50,30 @@ RSpec.describe MarkdownRubyDocumentation::Generate do
     end
   end
 
+  # before do
+  #   stub_const("MarkdownRubyDocumentation::GitHubLink", NullMethodPipe)
+  #   expect_any_instance_of(NullMethodPipe)
+  #     .to receive(:call) { |args|
+  #       expect(convert_method_hash(args)).to eq({ :the_sum_of_a_and_b => "This is an important part of the logic\n```ruby\n2 + 4\n```\n```javascript\n{\"abc\":\"123\",\"xyz\":\"890\"}\n```\n" })
+  #     }.and_call_original
+  # end
+
   before do
-    stub_const("MarkdownRubyDocumentation::GitHubLink", NullMethodPipe)
-    expect_any_instance_of(NullMethodPipe)
-      .to receive(:call) { |args|
-        expect(convert_method_hash(args)).to eq({ :the_sum_of_a_and_b => "This is an important part of the logic\n```ruby\n2 + 4\n```\n```javascript\n{\"abc\":\"123\",\"xyz\":\"890\"}\n```\n" })
-      }.and_call_original
+    @output = {}
+    allow(output_object).to receive(:call) do |name:, text:|
+      @output.merge!({ name => text })
+    end
   end
 
+  let(:output_object){ double("output_object", relative_dir: "spec") }
+
   it "saves a markdown file with generated docs" do
-    output = {}
     described_class.run(subjects:    [Namespace::DocumentMe],
-                                 output_proc: -> (name:, text:) { output.merge!({ name => text }) })
-    expect(output["Namespace::DocumentMe"]).to eq <<~MD
-      # Document Me < [Super Thing](Namespace::SuperThing)
-      Descendants: [Other Thing](Namespace::OtherThing)
+                        load_path: "save_location",
+                                 output_object: output_object)
+    expect(@output["Namespace::DocumentMe"]).to eq <<~MD
+      # Document Me < [Super Thing](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/namespace/super_thing.md)
+      Descendants: [Other Thing](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/namespace/other_thing.md)
 
       ## The Sum Of A And B
       This is an important part of the logic
@@ -75,11 +84,14 @@ RSpec.describe MarkdownRubyDocumentation::Generate do
       {"abc":"123","xyz":"890"}
       ```
 
+
+      [show on github](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/generate_spec.rb#L17)
+
     MD
   end
 
   it "structure" do
-    pages = described_class.run(subjects: [Namespace::DocumentMe])
+    pages = described_class.run(subjects: [Namespace::DocumentMe], load_path: "load_path", output_object: output_object)
     expect(pages).to eq({ "Namespace" => { "DocumentMe" => pages["Namespace"]["DocumentMe"] } })
   end
 end

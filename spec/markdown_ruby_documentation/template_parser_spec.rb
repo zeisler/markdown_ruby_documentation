@@ -1,4 +1,15 @@
 RSpec.describe MarkdownRubyDocumentation::TemplateParser do
+
+  let(:output_object){ double("output_object", relative_dir: "spec") }
+  let(:load_path){__FILE__}
+
+  before do
+    MarkdownRubyDocumentation::Generate.load_path = load_path
+    MarkdownRubyDocumentation::Generate.output_object = output_object
+    # allow(MarkdownRubyDocumentation::GitHubProject).to receive(:url){""}
+    # allow(MarkdownRubyDocumentation::GitHubProject).to receive(:root_path){""}
+  end
+
   describe "#to_hash" do
     context "COMMENT_REF:" do
       let!(:ruby_class) {
@@ -164,7 +175,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it do
         result = described_class.new(Test, [:method2]).to_hash
 
-        expect(convert_method_hash result).to eq({ method2: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb#L158\nhttps://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb\n" })
+        expect(convert_method_hash result).to eq({ method2: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb#L169\nhttps://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb\n" })
       end
     end
 
@@ -279,7 +290,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it "returns the commented method name" do
         result = described_class.new(Test, [:i_add_stuff]).to_hash
 
-        expect(convert_method_hash result).to eq({ :i_add_stuff => "[i_return_one](#i-return-one) + [i_return_two?](#i-return-two) + \"hello\"\n* __When__\n" })
+        expect(convert_method_hash result).to eq({ :i_add_stuff => "[i_return_one](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#i-return-one) + [i_return_two?](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#i-return-two) + \"hello\"\n* __When__\n" })
       end
     end
 
@@ -421,9 +432,9 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
             * __Given__
             * __When__ true
             __Then__
-            'unavailable' + [This Thing Works?](#this-thing-works)
+            'unavailable' + [This Thing Works?](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#this-thing-works)
             * __Else__
-            'eligible' + [Public 1method](#public-1method)
+            'eligible' + [Public 1method](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#public-1method)
 
             * __Given__ true
             * __When__ true
@@ -485,20 +496,20 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
 
           expect(convert_method_hash result).to eq({ :decision_from_rule => <<~TEXT })
             * __Given__
-            * __When__ [Data Unavailable?](#data-unavailable)
+            * __When__ [Data Unavailable?](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#data-unavailable)
             __Then__
             'unavailable'
-            * __When__ [Declared Bankruptcy Recently?](#declared-bankruptcy-recently)(with_in_years: [Bankruptcy Allowed Years Ago](#bankruptcy-allowed-years-ago))
+            * __When__ [Declared Bankruptcy Recently?](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#declared-bankruptcy-recently)(with_in_years: [Bankruptcy Allowed Years Ago](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#bankruptcy-allowed-years-ago))
             __Then__
             'decline'
-            * __When__ [Address](#address) is los_angeles_county?
+            * __When__ [Address](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#address) is los_angeles_county?
             __Then__
             'decline'
             * __Else__
             'eligible'
 
             * __Given__
-            * __When__ [Address](#address) is missing?
+            * __When__ [Address](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#address) is missing?
             __Then__
             'bankruptcy_declared'
 
@@ -561,9 +572,9 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
             * __Given__
             * __When__ true
             __Then__
-            'unavailable' and [this_thing_works?](#this-thing-works)
+            'unavailable' and [this_thing_works?](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#this-thing-works)
             * __Else__
-            'eligible' + [public_1method](#public-1method)
+            'eligible' + [public_1method](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#public-1method)
 
             * __Given__ true
             * __When__ true
