@@ -14,7 +14,11 @@ module MarkdownRubyDocumentation
     def call(items=nil)
       @items ||= items
       return "" if nothing_to_display?
-      md = ["# #{summary.title}", "#{summary.summary}\n".gsub(/\n\n\n/, "\n\n"), instances_methods, class_methods, "#{null_methods}\n".gsub(/\n\n\n/, "\n\n")].join("\n").gsub(/[\n]+\Z/, "\n\n")
+      md = ["# #{summary.title}", "#{summary.summary}\n".gsub(/\n\n\n/, "\n\n"), class_level_comment, instances_methods, class_methods, "#{null_methods}\n".gsub(/\n\n\n/, "\n\n")]
+             .reject(&:empty?)
+             .join("\n")
+             .gsub(/[\n]{3,}/, "\n\n")
+             .gsub(/[\n]+\Z/, "\n\n")
       other_types!
       md
     end
@@ -23,6 +27,16 @@ module MarkdownRubyDocumentation
 
     def item_types
       @item_types ||= items.group_by { |_, hash| hash[:method_object].class.name }
+    end
+
+    def class_level_comment
+      @class_level_comment ||= (items.delete(:class_level_comment) || {})
+
+      if @class_level_comment[:text]
+        "#{@class_level_comment[:text]}\n"
+      else
+        ""
+      end
     end
 
     def instances_methods
@@ -47,7 +61,7 @@ module MarkdownRubyDocumentation
       if md.blank?
         ""
       else
-        "## Reference Values\n" << md
+        "\n## Reference Values\n" << md
       end
     end
 
@@ -56,7 +70,7 @@ module MarkdownRubyDocumentation
     end
 
     def nothing_to_display?
-      [instances_methods, class_methods, null_methods].all?(&:empty?)
+      [class_level_comment, instances_methods, class_methods, null_methods].all?(&:empty?)
     end
   end
 end

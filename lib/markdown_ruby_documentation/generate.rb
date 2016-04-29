@@ -90,6 +90,7 @@ module MarkdownRubyDocumentation
           RejectBlankMethod,
           GitHubLink.new(subject: subject),
           ConstantsPresenter.new(subject),
+          ClassLevelComment.new(subject),
           MarkdownPresenter.new(summary: summary, title_key: section_key),
         ]
       end

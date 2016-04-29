@@ -84,7 +84,6 @@ RSpec.describe MarkdownRubyDocumentation::Generate do
       {"abc":"123","xyz":"890"}
       ```
 
-
       [show on github](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/generate_spec.rb#L17)
 
     MD
