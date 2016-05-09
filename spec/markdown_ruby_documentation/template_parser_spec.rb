@@ -585,5 +585,32 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
         end
       end
     end
+
+    describe "hash_to_markdown_table" do
+      let!(:ruby_class) { class Test; end }
+      subject { described_class.new(Test, [:method]) }
+
+      it "returns a table" do
+        hash = { :one => "one", :two => "two" }
+        expect(subject.hash_to_markdown_table(hash, key_name: "something", value_name: "hey")).to eq(
+          "| something  | hey |\n" \
+          "|------------|-----|\n" \
+          "| one        | one |\n" \
+          "| two        | two |"
+        )
+      end
+
+      context "hash with null values" do
+        it "returns a table with empty value for null" do
+          hash = { :one => "one", :two => nil }
+          expect(subject.hash_to_markdown_table(hash, key_name: "something", value_name: "hey")).to eq(
+            "| something  | hey |\n" \
+            "|------------|-----|\n" \
+            "| one        | one |\n" \
+            "| two        |     |"
+          )
+        end
+      end
+    end
   end
 end
