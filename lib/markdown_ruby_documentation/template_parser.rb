@@ -369,7 +369,7 @@ module MarkdownRubyDocumentation
 
       def hash_to_markdown_table(hash, key_name:, value_name:)
         key_max_length   = [hash.keys.group_by(&:size).max.first, key_name.size + 1].max
-        value_max_length = [hash.values.group_by(&:size).max.first, value_name.size + 1].max
+        value_max_length = [hash.values.group_by { |v| v.try!(:size) || 1 }.max.first, value_name.size + 1].max
         header           = markdown_table_header([[key_name, key_max_length+2], [value_name, value_max_length+2]])
         rows             = hash.map { |key, value| "| #{key.to_s.ljust(key_max_length)} | #{value.to_s.ljust(value_max_length)}|" }.join("\n")
         [header, rows].join("\n")
