@@ -8,7 +8,7 @@ module MarkdownRubyDocumentation
 
     def call(interface)
       _method = interface.reject do |_, meth|
-        meth[:method_object].is_a?(NullMethod)
+        meth[:method_object].is_a?(NullMethod) || meth[:method_object].visibility != :native
       end.first
       if _method
         filename, lineno = _method[1][:method_object].to_proc.source_location

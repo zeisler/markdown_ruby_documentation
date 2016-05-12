@@ -1,12 +1,13 @@
 module MarkdownRubyDocumentation
   class Method
     InvalidMethodReference = Class.new(StandardError)
-    attr_reader :method_reference
+    attr_reader :method_reference, :visibility
     protected :method_reference
 
-    def initialize(method_reference, context: Kernel)
+    def initialize(method_reference, context: Kernel, visibility: :public)
       @method_reference = method_reference.to_s
       @context          = context
+      @visibility = visibility
     end
 
     # @param [String] method_reference
@@ -15,16 +16,16 @@ module MarkdownRubyDocumentation
     #   "Constant.class_method_name" class method on a specific constant.
     #   "SomeClass#instance_method_name" an instance method on a specific constant.
     #   "#instance_method_name" an instance method in the current scope.
-    def self.create(method_reference, null_method: false, context: Kernel)
+    def self.create(method_reference, null_method: false, context: Kernel, visibility: :public)
       return method_reference if method_reference.is_a?(Method)
       case method_reference
       when InstanceMethod
-        InstanceMethod.new(method_reference, context: context)
+        InstanceMethod.new(method_reference, context: context, visibility: visibility)
       when ClassMethod
-        ClassMethod.new(method_reference, context: context)
+        ClassMethod.new(method_reference, context: context, visibility: visibility)
       else
         if null_method
-          NullMethod.new(method_reference, context: context)
+          NullMethod.new(method_reference, context: context, visibility: visibility)
         else
           raise InvalidMethodReference, "method_reference is formatted incorrectly: '#{method_reference}'"
         end

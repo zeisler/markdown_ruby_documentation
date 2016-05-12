@@ -9,6 +9,7 @@ module MarkdownRubyDocumentation
 
     def call(interface)
       constants.each do |const_name, value|
+        next if value.nil?
         interface[const_name] = { text: value, method_object: Method.create("#{subject.name}::#{const_name}", null_method: true) }
       end
       interface
@@ -21,7 +22,11 @@ module MarkdownRubyDocumentation
       when String
         value.inspect
       else
-        value
+        if value.to_s =~ /#<[a-zA-Z0-9\-_:]+:[0-9xa-f]+>/
+          nil
+        else
+          value
+        end
       end
     end
 

@@ -78,9 +78,11 @@ module MarkdownRubyDocumentation
       end
 
       def all_instance_and_class_methods(methods, subject)
-        instance_m = subject.instance_methods(false).concat(subject.private_instance_methods(false))
-        klass_m    = subject.methods(false).concat(subject.private_methods(false)) - Object.methods
-        methods.concat instance_m.map { |method| InstanceMethod.new("#{subject.name}##{method}", context: subject) }
+        native_instance_methods = (subject.instance_methods(false) - Object.instance_methods(false)).concat(subject.private_instance_methods(false) - Object.private_instance_methods(false))
+        super_instance_methods = (subject.instance_methods(true) - Object.instance_methods(true)).concat(subject.private_instance_methods(true) - Object.private_instance_methods(true)) - native_instance_methods
+          klass_m    = subject.methods(false).concat(subject.private_methods(false)) - Object.methods
+        methods.concat super_instance_methods.reverse.map { |method| InstanceMethod.new("#{subject.name}##{method}", context: subject, visibility: :super) }
+        methods.concat native_instance_methods.map { |method| InstanceMethod.new("#{subject.name}##{method}", context: subject, visibility: :native) }
         methods.concat klass_m.map { |method| ClassMethod.new("#{subject.name}.#{method}", context: subject) }
       end
 

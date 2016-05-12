@@ -13,7 +13,7 @@ RSpec.describe MarkdownRubyDocumentation::ClassLevelComment do
     {
       here_as_anchor: {
         text:          "",
-        method_object: MarkdownRubyDocumentation::Method.create("ToBeDocumented#here_as_anchor")
+        method_object: MarkdownRubyDocumentation::Method.create("ToBeDocumented#here_as_anchor", visibility: :native)
       },
     }
   }

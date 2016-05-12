@@ -6,8 +6,6 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
   before do
     MarkdownRubyDocumentation::Generate.load_path = load_path
     MarkdownRubyDocumentation::Generate.output_object = output_object
-    # allow(MarkdownRubyDocumentation::GitHubProject).to receive(:url){""}
-    # allow(MarkdownRubyDocumentation::GitHubProject).to receive(:root_path){""}
   end
 
   describe "#to_hash" do
@@ -51,6 +49,28 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it "complies comments references" do
         result = described_class.new(Test, [:method1, :method2, :method4]).to_hash
         expect(convert_method_hash(result)).to eq({ method1: "", method2: "This method does stuff\nHello\n\n", :method4 => "Goodbye\n\nHello\n" })
+      end
+    end
+
+    context "when including a module methods" do
+      let!(:ruby_class) {
+        class Test
+          module TestModule
+            #=mark_doc
+            # You should see this!
+            #=mark_end
+            def test1
+
+            end
+          end
+
+          include TestModule
+        end
+      }
+
+      it do
+        result = described_class.new(Test, [:test1]).to_hash
+        expect(convert_method_hash(result)).to eq( {:test1=>"You should see this!\n"})
       end
     end
 
@@ -175,7 +195,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it do
         result = described_class.new(Test, [:method2]).to_hash
 
-        expect(convert_method_hash result).to eq({ method2: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb#L169\nhttps://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb\n" })
+        expect(convert_method_hash result).to eq({ method2: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb#L189\nhttps://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb\n" })
       end
     end
 
@@ -193,7 +213,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it "adds comment at the end and parse the whole comment" do
         result = described_class.new(Test, [:document_me]).to_hash
 
-        expect(convert_method_hash result).to eq({ document_me: "hello\n[//]: # (This method has no mark_end)" })
+        expect(convert_method_hash result).to eq({ document_me: "hello\n" })
       end
     end
 
@@ -592,22 +612,24 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
 
       it "returns a table" do
         hash = { :one => "one", :two => "two" }
-        expect(subject.hash_to_markdown_table(hash, key_name: "something", value_name: "hey")).to eq(
-          "| something  | hey |\n" \
-          "|------------|-----|\n" \
-          "| one        | one |\n" \
-          "| two        | two |"
+        expect(subject.hash_to_markdown_table(hash, key_name: "something", value_name: "hey")).to eq(<<~TABLE[0..-2]
+          | something  | hey |
+          |------------|-----|
+          | one        | one |
+          | two        | two |
+        TABLE
         )
       end
 
       context "hash with null values" do
         it "returns a table with empty value for null" do
           hash = { :one => "one", :two => nil }
-          expect(subject.hash_to_markdown_table(hash, key_name: "something", value_name: "hey")).to eq(
-            "| something  | hey |\n" \
-            "|------------|-----|\n" \
-            "| one        | one |\n" \
-            "| two        |     |"
+          expect(subject.hash_to_markdown_table(hash, key_name: "something", value_name: "hey")).to eq(<<~TABLE[0..-2]
+            | something  | hey |
+            |------------|-----|
+            | one        | one |
+            | two        |     |
+          TABLE
           )
         end
       end

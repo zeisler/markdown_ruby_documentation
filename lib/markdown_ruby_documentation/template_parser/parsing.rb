@@ -55,7 +55,7 @@ module MarkdownRubyDocumentation
         if (v = when_start_and_end(comment_string))
           v
         elsif (x = when_only_start(comment_string))
-          x << "[//]: # (This method has no mark_end)"
+          x
         else
           ""
         end

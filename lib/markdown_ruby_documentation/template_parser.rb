@@ -54,7 +54,6 @@ module MarkdownRubyDocumentation
         rescue MethodSource::SourceNotFoundError => e
           @current_method = nil
           value           = false
-          puts e.message unless IGNORE_METHODS.any? { |im| e.message.include? im }
         end
         if value
           hash[method.name] = { text: value, method_object: method }
