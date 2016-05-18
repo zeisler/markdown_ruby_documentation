@@ -604,6 +604,40 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
           TEXT
         end
       end
+
+      context "ruby_to_markdown edge case with comment" do
+        let!(:ruby_class) {
+          class Test
+            LIEN_TO_VALUE_THRESHOLD = 80
+
+            #=mark_doc
+            # <%= ruby_to_markdown %>
+            def the_method_name(value:)
+              if identifier == "first"
+                # NOTE: rule is "15% of value value up to 700_000, 10% of any additional value"
+                value * 0.15 - [0, value - 700_000].max * 0.05
+              elsif identifier == "last"
+                1 <= LIEN_TO_VALUE_THRESHOLD
+              end
+            end
+          end
+        }
+
+        it "returns the commented method name" do
+          result = described_class.new(Test, [:the_method_name]).to_hash
+
+          expect(convert_method_hash result).to eq({ :the_method_name => <<~TEXT })
+            * __If__ identifier Equal to "first"
+            __Then__
+            </br>*( NOTE: rule is "15% of value value up to 700,000, 10% of any additional value")*</br>
+            value * 0.15 - [0, value - 700,000].max * 0.05
+            * __Else If__ identifier Equal to "last"
+            __Then__
+            1 is less than or equal to [80](#lien-to-value-threshold)
+
+          TEXT
+        end
+      end
     end
 
     describe "hash_to_markdown_table" do

@@ -129,6 +129,7 @@ module MarkdownRubyDocumentation
         :remove_end_keyword,
         :constants_with_name_and_value,
         :remove_memoized_vars,
+        :comment_format
       ]
 
       def ruby_to_markdown(*args)
@@ -145,6 +146,10 @@ module MarkdownRubyDocumentation
           ruby_source = send(processor, ruby_source, options) if options
         end
         ruby_source
+      end
+
+      def comment_format(source_code, proc: false)
+        gsub_replacement(source_code, { /^#(.*)/ => "</br>*(\\1)*</br>" }, proc: proc)
       end
 
       def remove_memoized_vars(source_code=print_method_source, *)
@@ -331,8 +336,12 @@ module MarkdownRubyDocumentation
 
       def constants_with_name_and_value(ruby_source, *)
         ruby_source.gsub(/([A-Z]+[A-Z_0-9]+)/) do |match|
-          value = ruby_class.const_get(match)
-          "[#{ConstantsPresenter.format(value)}](##{match.dasherize.downcase})"
+          begin
+            value = ruby_class.const_get(match)
+            "[#{ConstantsPresenter.format(value)}](##{match.dasherize.downcase})"
+          rescue NameError
+            match
+          end
         end
       end
 
@@ -348,11 +357,10 @@ module MarkdownRubyDocumentation
 
       def ruby_if_statement_to_md(ruby_source, proc: false)
         conversions = {
-          /else if(.*)/ => "* __Else If__\\1\n__Then__",
-          /elsif(.*)/   => "* __Else If__\\1\n__Then__",
-          /if(.*)/      => "* __If__\\1\n__Then__",
-          /unless(.*)/  => "* __Unless__\\1\n__Then__",
-          "else"        => "* __Else__"
+          /elsif(.*)/         => "* __Else If__\\1\n__Then__",
+          /^\s?if(.*)/ => "* __If__\\1\n__Then__",
+          /unless(.*)/        => "* __Unless__\\1\n__Then__",
+          "else"              => "* __Else__"
         }
         gsub_replacement(ruby_source, conversions, proc: proc)
       end
