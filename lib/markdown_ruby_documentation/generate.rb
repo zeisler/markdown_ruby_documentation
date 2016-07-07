@@ -1,5 +1,3 @@
-require "parallel"
-
 module MarkdownRubyDocumentation
   class Generate
     # @param [Class] subjects ruby classes to generate documentation from.
