@@ -24,8 +24,8 @@ module MarkdownRubyDocumentation
         batches           = subjects.each_slice(parallel_config.fetch(:in_threads, 2))
         threads           = []
         batches.each do |batch|
-          threads << Thread.new(Array[batch].flatten) do |(_batch)|
-            _batch.map do |subject|
+          threads << Thread.new(batch) do |(_batch)|
+          Array[_batch].flatten.map do |subject|
               progressbar.title = subject.name.ljust(left_padding)
               Page.new(subject:           subject,
                        output_object:     output_object,
