@@ -339,14 +339,16 @@ module MarkdownRubyDocumentation
 
       def methods_as_local_links(ruby_source,
                                  call_on_title: :titleize,
-                                 method_to_class: {})
+                                 method_to_class: {},
+                                 proc: false)
         ruby_source.gsub(MethodLink::RUBY_METHOD_REGEX) do |match|
           if is_a_method_on_ruby_class?(match)
-            MethodLink.new(match:            match,
-                           ruby_class:       ruby_class,
-                           call_on_title:    call_on_title,
-                           method_to_class:  method_to_class,
-                           link_to_markdown: method(:link_to_markdown)).link
+            replacement = MethodLink.new(match:            match,
+                                         ruby_class:       ruby_class,
+                                         call_on_title:    call_on_title,
+                                         method_to_class:  method_to_class,
+                                         link_to_markdown: method(:link_to_markdown)).link
+            proc ? proc.call(replacement, match) : replacement
           else
             match
           end

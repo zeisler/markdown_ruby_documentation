@@ -289,8 +289,12 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       let!(:ruby_class) {
         class Test
 
+          PROC = -> (r,_) do
+            r.gsub("https", "http")
+          end
+
           #=mark_doc
-          # <%= methods_as_local_links print_method_source(__method__), { call_on_title: false } %>
+          # <%= methods_as_local_links print_method_source(__method__), { call_on_title: false, proc: PROC } %>
           # <%= methods_as_local_links "* __When__" %>
           #=mark_end
           def i_add_stuff
@@ -310,7 +314,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it "returns the commented method name" do
         result = described_class.new(Test, [:i_add_stuff]).to_hash
 
-        expect(convert_method_hash result).to eq({ :i_add_stuff => "[i_return_one](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#i-return-one) + [i_return_two?](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#i-return-two) + \"hello\"\n* __When__\n" })
+        expect(convert_method_hash result).to eq({ :i_add_stuff => "[i_return_one](http://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#i-return-one) + [i_return_two?](http://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#i-return-two) + \"hello\"\n* __When__\n" })
       end
     end
 

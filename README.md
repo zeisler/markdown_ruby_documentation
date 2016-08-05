@@ -105,7 +105,7 @@ Converts case statements and if statements to bulleted markdown
 * ruby_if_statement_to_md, options: proc(replacement, match)
 * ruby_case_statement_to_md, options: proc(replacement, match)
 * ruby_operators_to_english, options: proc(replacement, match)
-* methods_as_local_links, options: method_to_class: { method_name => OwningConstant }
+* methods_as_local_links, options: method_to_class: { method_name => OwningConstant }, proc(replacement, match)
 * question_mark_method_format, options: proc(replacement, match)
 * remove_end_keyword, options: proc(replacement, match)
 * constants_with_name_and_value, options: proc(replacement, match, opt={})
