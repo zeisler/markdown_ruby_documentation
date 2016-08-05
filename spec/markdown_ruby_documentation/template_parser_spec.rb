@@ -402,7 +402,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
             MAX_COMBINED_LIEN_TO_VALUE_RATIO_SAN_DIEGO = 3
             MAX_COMBINED_LIEN_TO_VALUE_RATIO_UCCC      = 2
             #=mark_doc
-            # <%= constants_with_name_and_value print_method_source, proc: -> (r,m,o){ "[#{m}](#{o[:link]})" } %>
+            # <%= constants_with_name_and_value print_method_source, proc: -> (r,m,o){ format_link(m, o[:link]) } %>
             #=mark_end
             def i_add_stuff
               if true

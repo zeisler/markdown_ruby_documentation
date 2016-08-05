@@ -142,39 +142,49 @@ module MarkdownRubyDocumentation
         ruby_source        = any_args.source_code
 
         RUBY_TO_MARKDOWN_PROCESSORS.each do |processor|
-          options     = disable_processors.fetch(processor, {})
-          ruby_source = send(processor, ruby_source, options) if options
+          options     = disable_processors.fetch(processor, :enabled)
+          ruby_source =  if options == :enabled
+            send(processor, ruby_source)
+          elsif options.is_a?(Hash)
+            send(processor, ruby_source, options)
+          end
         end
         ruby_source
       end
 
-      def comment_format(source_code, proc: false)
+      def comment_format(source_code=print_method_source, proc: false)
         gsub_replacement(source_code, { /^#(.*)/ => "</br>*(\\1)*</br>" }, proc: proc)
       end
 
-      def remove_memoized_vars(source_code=print_method_source, *)
-        source_code.gsub(/@[a-z][a-z0-9_]+ \|\|=?\s/, "") # @memoized_vars ||=
+      def remove_memoized_vars(source_code=print_method_source, proc: false)
+        conversions = {
+          /@[a-z][a-z0-9_]+ \|\|=?\s/ => "" # @memoized_vars ||=
+        }
+        gsub_replacement(source_code, conversions, proc: proc)
       end
 
-      def nil_check_readable(source_code, proc: false)
+      def nil_check_readable(source_code=print_method_source, proc: false)
         conversions = {
           ".nil?" => " is missing?"
         }
         gsub_replacement(source_code, conversions, proc: proc)
       end
 
-      def elsif_to_else_if(source_code, proc: false)
+      def elsif_to_else_if(source_code=print_method_source, proc: false)
         conversions = {
           "elsif" => "else if"
         }
         gsub_replacement(source_code, conversions, proc: proc)
       end
 
-      def remove_colons(source_code)
-        source_code.gsub(":", '')
+      def remove_colons(source_code=print_method_source, proc: proc)
+        conversions = {
+          ":" => ''
+        }
+        gsub_replacement(source_code, conversions, proc: proc)
       end
 
-      def ruby_operators_to_english(source_code, proc: false)
+      def ruby_operators_to_english(source_code=print_method_source, proc: false)
         conversions = {
           "&&"   => "and",
           ">="   => "is greater than or equal to",
@@ -188,23 +198,32 @@ module MarkdownRubyDocumentation
         gsub_replacement(source_code, conversions, proc: proc)
       end
 
-      def readable_ruby_numbers(source_code, proc: -> (value) { ActiveSupport::NumberHelper.number_to_delimited(value) })
+      def readable_ruby_numbers(source_code=print_method_source, proc: -> (replacement, _) { ActiveSupport::NumberHelper.number_to_delimited(replacement) })
         source_code.gsub(/([0-9][0-9_]+[0-9]+)/) do |match|
-          proc.call(eval(match))
+          proc.call(eval(match), match)
         end
       end
 
-      def convert_early_return_to_if_else(source_code, *)
-        source_code = source_code.gsub(/(.+) if (.+)/, "if \\2\n\\1\nend")
-        source_code.gsub(/(.+) unless (.+)/, "unless \\2\n\\1\nend")
+      def convert_early_return_to_if_else(source_code=print_method_source, proc: false)
+        conversions = {
+          /(.+) if (.+)/   => "if \\2\n\\1\nend",
+          /(.+) unless (.+)/ => "unless \\2\n\\1\nend"
+        }
+        gsub_replacement(source_code, conversions, proc: proc)
       end
 
-      def pretty_early_return(source_code, *)
-        source_code.gsub(/return (unless|if)/, 'return nothing \1')
+      def pretty_early_return(source_code=print_method_source, proc: false)
+        conversions = {
+          /return (unless|if)/   => 'return nothing \1'
+        }
+        gsub_replacement(source_code, conversions, proc: proc)
       end
 
-      def ternary_to_if_else(ternary, *)
-        ternary.gsub(/(.*) \? (.*) \: (.*)/, "if \\1\n\\2\nelse\n\\3\nend")
+      def ternary_to_if_else(source_code=print_method_source, proc: false)
+        conversions = {
+          /(.*) \? (.*) \: (.*)/   =>  "if \\1\n\\2\nelse\n\\3\nend"
+        }
+        gsub_replacement(source_code, conversions, proc: proc)
       end
 
       # @param [String] title the name of the link
@@ -340,7 +359,7 @@ module MarkdownRubyDocumentation
             value           = ruby_class.const_get(match)
             link            = "##{match.dasherize.downcase}"
             formatted_value = ConstantsPresenter.format(value)
-            replacement     = "[#{formatted_value}](#{link})"
+            replacement     = format_link(formatted_value, link)
             proc ? proc.call(replacement, match, { value: value, link: link, formatted_value: formatted_value }) : replacement
           rescue NameError
             match

@@ -98,18 +98,18 @@ Converts case statements and if statements to bulleted markdown
    `example ruby_to_markdown(ruby_operators_to_english: { proc: ->(replacement, match) { "do some alteration" }})`
    
 **processors**
-* readable_ruby_numbers
-* pretty_early_return
-* convert_early_return_to_if_else
-* ternary_to_if_else
-* ruby_if_statement_to_md
-* ruby_case_statement_to_md
+* readable_ruby_numbers, options: proc(ruby_number_object, number_as_string)
+* pretty_early_return, options: proc(replacement, match)
+* convert_early_return_to_if_else, options: proc(replacement, match)
+* ternary_to_if_else, options: proc(replacement, match)
+* ruby_if_statement_to_md, options: proc(replacement, match)
+* ruby_case_statement_to_md, options: proc(replacement, match)
 * ruby_operators_to_english, options: proc(replacement, match)
 * methods_as_local_links, options: method_to_class: { method_name => OwningConstant }
-* question_mark_method_format
-* remove_end_keyword
-* constants_with_name_and_value
-* remove_memoized_vars
+* question_mark_method_format, options: proc(replacement, match)
+* remove_end_keyword, options: proc(replacement, match)
+* constants_with_name_and_value, options: proc(replacement, match, opt={})
+* remove_memoized_vars, options: proc(replacement, match)
 
 
 #### `format_link`
