@@ -372,7 +372,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
           MAX_COMBINED_LIEN_TO_VALUE_RATIO_SAN_DIEGO = 3
           MAX_COMBINED_LIEN_TO_VALUE_RATIO_UCCC      = 2
           #=mark_doc
-          # <%= constants_with_name_and_value print_method_source(__method__) %>
+          # <%= constants_with_name_and_value print_method_source %>
           #=mark_end
           def i_add_stuff
             if true
@@ -387,8 +387,47 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it "returns the commented method name" do
         result = described_class.new(Test, [:i_add_stuff]).to_hash
 
-        expect(convert_method_hash result).to eq({ :i_add_stuff => "if true\n[3](#max-combined-lien-to-value-ratio-san-diego)\nelse\n[2](#max-combined-lien-to-value-ratio-uccc)\nend\n" })
+        expect(convert_method_hash result).to eq({ :i_add_stuff => <<~MARKDOWN})
+          if true
+          [3](#max-combined-lien-to-value-ratio-san-diego)
+          else
+          [2](#max-combined-lien-to-value-ratio-uccc)
+          end
+        MARKDOWN
       end
+
+      context "with proc" do
+        let!(:ruby_class) {
+          class Test
+            MAX_COMBINED_LIEN_TO_VALUE_RATIO_SAN_DIEGO = 3
+            MAX_COMBINED_LIEN_TO_VALUE_RATIO_UCCC      = 2
+            #=mark_doc
+            # <%= constants_with_name_and_value print_method_source, proc: -> (r,m,o){ "[#{m}](#{o[:link]})" } %>
+            #=mark_end
+            def i_add_stuff
+              if true
+                MAX_COMBINED_LIEN_TO_VALUE_RATIO_SAN_DIEGO
+              else
+                MAX_COMBINED_LIEN_TO_VALUE_RATIO_UCCC
+              end
+            end
+          end
+        }
+
+        it "returns the commented method name" do
+          result = described_class.new(Test, [:i_add_stuff]).to_hash
+
+          expect(convert_method_hash result).to eq({ :i_add_stuff => <<~MARKDOWN})
+          if true
+          [MAX_COMBINED_LIEN_TO_VALUE_RATIO_SAN_DIEGO](#max-combined-lien-to-value-ratio-san-diego)
+          else
+          [MAX_COMBINED_LIEN_TO_VALUE_RATIO_UCCC](#max-combined-lien-to-value-ratio-uccc)
+          end
+          MARKDOWN
+        end
+      end
+
+
     end
 
     describe "ruby_to_markdown" do

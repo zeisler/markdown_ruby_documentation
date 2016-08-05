@@ -334,11 +334,14 @@ module MarkdownRubyDocumentation
         end
       end
 
-      def constants_with_name_and_value(ruby_source, *)
+      def constants_with_name_and_value(ruby_source, proc: false)
         ruby_source.gsub(/([A-Z]+[A-Z_0-9]+)/) do |match|
           begin
-            value = ruby_class.const_get(match)
-            "[#{ConstantsPresenter.format(value)}](##{match.dasherize.downcase})"
+            value           = ruby_class.const_get(match)
+            link            = "##{match.dasherize.downcase}"
+            formatted_value = ConstantsPresenter.format(value)
+            replacement     = "[#{formatted_value}](#{link})"
+            proc ? proc.call(replacement, match, { value: value, link: link, formatted_value: formatted_value }) : replacement
           rescue NameError
             match
           end
