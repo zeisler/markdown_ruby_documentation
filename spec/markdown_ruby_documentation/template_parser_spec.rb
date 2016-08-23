@@ -402,7 +402,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
 
       context "with proc" do
         let!(:ruby_class) {
-          class Test
+          class Test10
             MAX_COMBINED_LIEN_TO_VALUE_RATIO_SAN_DIEGO = 3
             MAX_COMBINED_LIEN_TO_VALUE_RATIO_UCCC      = 2
             #=mark_doc
@@ -419,7 +419,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
         }
 
         it "returns the commented method name" do
-          result = described_class.new(Test, [:i_add_stuff]).to_hash
+          result = described_class.new(Test10, [:i_add_stuff]).to_hash
 
           expect(convert_method_hash result).to eq({ :i_add_stuff => <<~MARKDOWN})
           if true

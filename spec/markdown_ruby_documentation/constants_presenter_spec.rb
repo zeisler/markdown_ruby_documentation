@@ -13,8 +13,6 @@ RSpec.describe MarkdownRubyDocumentation::ConstantsPresenter do
       expect(result).to eq({
                              method_name_does_not_matter: { text:          "",
                                                             method_object: nil },
-                             method_name_does_not_matter: { text:          "",
-                                                            method_object: nil },
                              CONSTANT_NUM:                { text:          "10,000",
                                                             method_object: MarkdownRubyDocumentation::NullMethod.new("SomeClassWithSomeConstants::CONSTANT_NUM") },
                              CONSTANT_STRING:             { text:          '"hello"',

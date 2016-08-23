@@ -177,7 +177,7 @@ module MarkdownRubyDocumentation
         gsub_replacement(source_code, conversions, proc: proc)
       end
 
-      def remove_colons(source_code=print_method_source, proc: proc)
+      def remove_colons(source_code=print_method_source, proc: false)
         conversions = {
           ":" => ''
         }
@@ -299,7 +299,7 @@ module MarkdownRubyDocumentation
           if constant_override
             constant_override_method_path
           else
-            link = link_to_markdown.call(method_path, title: title)
+            link = link_to_markdown.call(method_name, title: title, _ruby_class: method_owner)
             if link == :non_project_location
               match
             else
@@ -327,8 +327,12 @@ module MarkdownRubyDocumentation
           @constant_override ||= method_to_class[match.to_sym]
         end
 
-        def method_path
-          Pathname(Method.create("##{match}", context: ruby_class).to_proc.source_location.first+"##{match}")
+        def method_name
+          "##{match}"
+        end
+
+        def method_owner
+          Method.create(method_name, context: ruby_class).to_proc.owner
         end
 
         def constant_override_method_path
