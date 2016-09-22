@@ -77,6 +77,14 @@ Creates a url to the method location on GitHub based on the current sha or it de
 ##### `git_hub_file_url(file_path || Class)`
 Creates a url to the file on GitHub based on the current sha or it defaults to master.
 
+##### `link_to_markdown` or `link_to`(klass_or_path, title: String)
+@param [Class, String, Pathname] klass_or_path
+  1. String or Class representing a method reference
+  2. Pathname representing the full path of the file location a method is defined
+@param [String] title is the link display value
+@return [String, Symbol] Creates link to a given generated markdown file or returns :non_project_location message.
+  1. "[title](path/to/markdown/file.md#method-name)"
+  2. :non_project_location
 
 ##### Example method reference inputs
 

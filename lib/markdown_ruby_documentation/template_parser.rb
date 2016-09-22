@@ -251,7 +251,7 @@ module MarkdownRubyDocumentation
       # @return [String, Symbol] Creates link to a given generated markdown file or returns :non_project_location message.
       #   1. "[title](path/to/markdown/file.md#method-name)"
       #   2. :non_project_location
-      def link_to_markdown(klass_or_path, title:, _ruby_class: ruby_class)
+      def link_to_markdown(klass_or_path, _ruby_class: ruby_class, title: default_title(klass_or_path, _ruby_class))
         if klass_or_path.is_a?(String) || klass_or_path.is_a?(Class) || klass_or_path.is_a?(Module)
           link_to_markdown_method_reference(method_reference: klass_or_path, title: title, ruby_class: _ruby_class)
         elsif klass_or_path.is_a?(Pathname)
@@ -259,6 +259,17 @@ module MarkdownRubyDocumentation
         else
           raise ArgumentError, "invalid first arg given: #{klass_or_path} for #{__method__}"
         end
+      end
+
+      alias_method :link_to, :link_to_markdown
+
+      def default_title(klass_or_path, _ruby_class)
+        method = MarkdownRubyDocumentation::Method.create(klass_or_path, null_method: true, context: _ruby_class)
+        if method.name
+          method.name
+        else
+          method.context_name.to_s.demodulize
+        end.to_s.titleize
       end
 
       def link_to_markdown_method_reference(method_reference:, title:, ruby_class:)

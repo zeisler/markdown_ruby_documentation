@@ -4,7 +4,6 @@ module MarkdownRubyDocumentation
     attr_reader :text, :section_key, :root_path
 
     def initialize(section_key:, root_path:)
-
       @section_key = section_key
       @root_path   = root_path
     end

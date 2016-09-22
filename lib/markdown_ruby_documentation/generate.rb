@@ -115,6 +115,7 @@ module MarkdownRubyDocumentation
       def string_pipeline
         [
           MethodLinker.new(section_key: section_key, root_path: "./"),
+          RelativeLinkConverter.new(subject: subject),
         ]
       end
 
