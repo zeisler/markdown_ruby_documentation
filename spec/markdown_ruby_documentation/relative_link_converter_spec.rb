@@ -42,4 +42,23 @@ RSpec.describe MarkdownRubyDocumentation::RelativeLinkConverter do
     )
     end
   end
+
+  context "Another Case" do
+    subject {
+      described_class.new(subject: double(name: "DecisionEngine::Rules::Ofac"))
+    }
+
+    let(:output_object){
+      double("output_object", relative_dir: "doc/rules")
+    }
+    let(:text) do
+      "[Decision From Override](https://github.com/zeisler/markdown_ruby_documentation/blob/master/doc/rules/decision_engine/rules/ofac.md#decision-from-override) or [Decision From Rule](https://github.com/zeisler/markdown_ruby_documentation/blob/master/doc/rules/decision_engine/rules/ofac.md#decision-from-rule)"
+    end
+
+    it do
+      expect(subject.call(text)).to eq(
+                                      "[Decision From Override](#decision-from-override) or [Decision From Rule](#decision-from-rule)"
+                                    )
+    end
+  end
 end
