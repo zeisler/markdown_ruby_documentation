@@ -232,7 +232,7 @@ module MarkdownRubyDocumentation
       #   #=> "[MyLink](#path/to/it#method-name)"
       def format_link(title, link_ref)
         path, anchor   = *link_ref.to_s.split("#")
-        formatted_path = [path, anchor.try!(:dasherize).try!(:delete, "?")].compact.join("#")
+        formatted_path = [path, anchor.try!(:dasherize).try!(:delete, "?").try(:delete, "!")].compact.join("#")
         "[#{title}](#{formatted_path})"
       end
 
@@ -318,7 +318,7 @@ module MarkdownRubyDocumentation
             end
           end
         rescue UnimplementedMethod => e
-          "[#{title}](##{match.downcase.dasherize.delete(" ").delete('?')})"
+          "[#{title}](##{match.downcase.dasherize.delete(" ").delete('?').delete("!")})"
         end
 
         private

@@ -34,7 +34,7 @@ module MarkdownRubyDocumentation
     end
 
     def md_id(str)
-      str.downcase.dasherize.delete(" ").delete('?')
+      str.downcase.dasherize.delete(" ").delete('?').delete('!')
     end
   end
 end

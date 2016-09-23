@@ -13,7 +13,7 @@ module MarkdownRubyDocumentation
     end
 
     def generate
-      text.scan(/\[.*\]\((.*)\)/).each do |r|
+      text.scan(/\[[\w?\-_!0-9]*\]\((.*?)\)/).each do |r|
         link = r.first
         if link.include?(path.to_s)
           @text = text.gsub(link, create_relative_link(link))
