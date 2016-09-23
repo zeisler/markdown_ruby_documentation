@@ -272,7 +272,12 @@ module MarkdownRubyDocumentation
         end.to_s.titleize
       end
 
+      IGNORE_METHOD_OWNERS = [
+        Object
+      ]
+
       def link_to_markdown_method_reference(method_reference:, title:, ruby_class:)
+        return title if IGNORE_METHOD_OWNERS.include?(ruby_class)
         method = MarkdownRubyDocumentation::Method.create(method_reference, null_method: true, context: ruby_class)
         parts  = method.context_name.to_s.split("::").reject(&:blank?)
         path   = parts.map { |p| p.underscore }.join("/")

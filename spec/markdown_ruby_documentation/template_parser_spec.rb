@@ -672,6 +672,26 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
         end
       end
 
+      context "ruby_to_markdown ignore linking methods on Object" do
+        let!(:ruby_class) {
+          class Test
+            #=mark_doc
+            # <%= ruby_to_markdown %>
+            def i_add_stuff
+              nil.present?
+            end
+          end
+        }
+
+        it "returns the commented method name" do
+          result = described_class.new(Test, [:i_add_stuff]).to_hash
+
+          expect(convert_method_hash result).to eq({ :i_add_stuff => <<~TEXT })
+            nil is Present?
+          TEXT
+        end
+      end
+
       context "ruby_to_markdown edge case with comment" do
         let!(:ruby_class) {
           class Test
