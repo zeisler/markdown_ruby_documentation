@@ -125,6 +125,7 @@ module MarkdownRubyDocumentation
         :ruby_operators_to_english,
         :nil_check_readable,
         :question_mark_method_format,
+        :symbol_to_proc,
         :methods_as_local_links,
         :remove_end_keyword,
         :constants_with_name_and_value,
@@ -395,8 +396,18 @@ module MarkdownRubyDocumentation
         end
       end
 
-      def remove_end_keyword(ruby_source, *)
-        ruby_source.gsub(/^[\s]*end\n?/, "")
+      def symbol_to_proc(ruby_source, proc: false)
+        conversions = {
+          /\(&:([a-z_?!]*)\)/ => " \\1"
+        }
+        gsub_replacement(ruby_source, conversions, proc: proc)
+      end
+
+      def remove_end_keyword(ruby_source, proc: false)
+        conversions = {
+          /^[\s]*end\n?/ => ""
+        }
+        gsub_replacement(ruby_source, conversions, proc: proc)
       end
 
       def ruby_if_statement_to_md(ruby_source, proc: false)

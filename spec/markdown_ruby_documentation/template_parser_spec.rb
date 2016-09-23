@@ -692,6 +692,28 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
         end
       end
 
+      context "ruby_to_markdown is any? empty?" do
+        let!(:ruby_class) {
+          class Test
+            #=mark_doc
+            # <%= ruby_to_markdown %>
+            def i_add_stuff
+              array = []
+              array.any?(&:empty?)
+            end
+          end
+        }
+
+        it "returns the commented method name" do
+          result = described_class.new(Test, [:i_add_stuff]).to_hash
+
+          expect(convert_method_hash result).to eq({ :i_add_stuff => <<~TEXT })
+           array = []
+           array is any? empty?
+          TEXT
+        end
+      end
+
       context "ruby_to_markdown edge case with comment" do
         let!(:ruby_class) {
           class Test
