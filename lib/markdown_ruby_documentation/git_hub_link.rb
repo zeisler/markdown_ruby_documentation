@@ -10,13 +10,13 @@ module MarkdownRubyDocumentation
 
     def call(hash)
       hash.each do |name, values|
-        hash[name][:text] = "#{values[:text]}\n\n[show on github](#{create_link(name: name, method_object: values[:method_object])})"
+        hash[name][:text] = "#{values[:text]}\n\n[show on github](#{create_link(name: name, method_object: values[:method_object], context: subject)})"
       end
     end
 
-    def create_link(name: nil, method_object: nil)
+    def create_link(name: nil, method_object: nil, context: Kernel)
       if name && method_object.nil?
-        method_object = Method.create("##{name}")
+        method_object = Method.create("##{name}", context: context)
       end
       MethodUrl.new(subject: subject, base_url: base_url, root: root, method_object: method_object).to_s
     end
@@ -66,7 +66,7 @@ module MarkdownRubyDocumentation
       end
 
       def to_s
-        file, lineno = subject.public_send(method_object.type, method_object.name).source_location
+        file, lineno = method_object.source_location
         FileUrl.new(file_path: file, base_url: base_url, root: root).link(file, lineno)
       end
     end

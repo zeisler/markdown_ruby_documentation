@@ -2,12 +2,15 @@ module MarkdownRubyDocumentation
   class Method
     InvalidMethodReference = Class.new(StandardError)
     attr_reader :method_reference, :visibility
+    attr_accessor :file_path, :line_no
     protected :method_reference
 
-    def initialize(method_reference, context: Kernel, visibility: :public)
+    def initialize(method_reference, context: Kernel, visibility: :public, file_path: nil, line_no: nil)
       @method_reference = method_reference.to_s
       @context          = context
-      @visibility = visibility
+      @visibility       = visibility
+      @file_path        = file_path
+      @line_no          = line_no
     end
 
     # @param [String] method_reference
@@ -16,16 +19,16 @@ module MarkdownRubyDocumentation
     #   "Constant.class_method_name" class method on a specific constant.
     #   "SomeClass#instance_method_name" an instance method on a specific constant.
     #   "#instance_method_name" an instance method in the current scope.
-    def self.create(method_reference, null_method: false, context: Kernel, visibility: :public)
+    def self.create(method_reference, null_method: false, context: Kernel, visibility: :public, file_path: nil)
       return method_reference if method_reference.is_a?(Method)
       case method_reference
       when InstanceMethod
-        InstanceMethod.new(method_reference, context: context, visibility: visibility)
+        InstanceMethod.new(method_reference, context: context, visibility: visibility, file_path: file_path)
       when ClassMethod
-        ClassMethod.new(method_reference, context: context, visibility: visibility)
+        ClassMethod.new(method_reference, context: context, visibility: visibility, file_path: file_path)
       else
         if null_method
-          NullMethod.new(method_reference, context: context, visibility: visibility)
+          NullMethod.new(method_reference, context: context, visibility: visibility, file_path: file_path)
         else
           raise InvalidMethodReference, "method_reference is formatted incorrectly: '#{method_reference}'"
         end
@@ -63,7 +66,7 @@ module MarkdownRubyDocumentation
         constant = method_reference.split(type_symbol).first
         begin
           constant.constantize
-        rescue NameError => e
+        rescue NameError
           @context.const_get(constant)
         end
       end
@@ -95,6 +98,14 @@ module MarkdownRubyDocumentation
     # @return [Proc]
     def to_proc
       context.public_send(type, name)
+    end
+
+    def source_location
+      if file_path && line_no
+        [file_path, line_no]
+      else
+        context.public_send(type, name).source_location
+      end
     end
 
     def type

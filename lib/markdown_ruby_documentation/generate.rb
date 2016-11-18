@@ -1,6 +1,6 @@
 module MarkdownRubyDocumentation
   class Generate
-    # @param [Class] subjects ruby classes to generate documentation from.
+    # @param [Array[Class, String]] subjects ruby classes to generate documentation from and file location.
     # @param [Module] erb_methods must contain #link_to_markdown and contain any additional methods for comment ERB
     # @param [Proc] output_object given name: and text: for use in saving the the files.
     # @param [String] load_path
@@ -18,16 +18,18 @@ module MarkdownRubyDocumentation
         erb_methods_class.extend TemplateParser::CommentMacros
         erb_methods_class.extend erb_methods
         TemplateParser::CommentMacros.include erb_methods
-        left_padding(subjects)
-        progressbar(subjects)
+        subject_classes = subjects.map { |h| h.fetch(:class) }
+        left_padding(subject_classes)
+        progressbar(subject_classes)
         progressbar.title = "Compiling Markdown".ljust(left_padding)
         batches           = subjects.each_slice(parallel_config.fetch(:in_threads, 2))
         threads           = []
         batches.each do |batch|
           threads << Thread.new(batch) do |(_batch)|
           Array[_batch].flatten.map do |subject|
-              progressbar.title = subject.name.ljust(left_padding)
-              Page.new(subject:           subject,
+            progressbar.title = subject.fetch(:class).name.ljust(left_padding)
+            Page.new(subject_class:       subject.fetch(:class),
+                     subject_location:    subject.fetch(:file_path).to_s,
                        output_object:     output_object,
                        erb_methods_class: erb_methods_class,
                        load_path:         load_path).call.tap { progressbar.increment }
@@ -59,16 +61,18 @@ module MarkdownRubyDocumentation
     end
 
     class Page
-      attr_reader :subject, :output_object, :erb_methods_class, :load_path
+      attr_reader :subject, :subject_location, :output_object, :erb_methods_class, :load_path
 
-      def initialize(subject:,
+      def initialize(subject_class:,
+                     subject_location:,
                      methods: [],
                      load_path:,
                      output_object:,
                      erb_methods_class:)
-        initialize_methods(methods, subject)
+        initialize_methods(methods, subject_class, subject_location)
         @erb_methods_class = erb_methods_class
-        @subject           = subject
+        @subject           = subject_class
+        @subject_location  = subject_location
         methods            = methods
         @methods           = methods
         @load_path         = load_path
@@ -84,21 +88,21 @@ module MarkdownRubyDocumentation
       end
 
       private
-      def initialize_methods(methods, subject)
+      def initialize_methods(methods, subject, subject_location)
         if methods.empty?
-          all_instance_and_class_methods(methods, subject)
+          all_instance_and_class_methods(methods, subject, subject_location)
         else
-          methods.map! { |method| method.is_a?(Symbol) ? InstanceMethod.new("#{subject.name}##{method}", context: subject) : method }
+          methods.map! { |method| method.is_a?(Symbol) ? InstanceMethod.new("#{subject.name}##{method}", context: subject, file_path: subject_location) : method }
         end
       end
 
-      def all_instance_and_class_methods(methods, subject)
+      def all_instance_and_class_methods(methods, subject, subject_location)
         native_instance_methods = (subject.instance_methods(false) - Object.instance_methods(false)).concat(subject.private_instance_methods(false) - Object.private_instance_methods(false))
         super_instance_methods  = (subject.instance_methods(true) - Object.instance_methods(true)).concat(subject.private_instance_methods(true) - Object.private_instance_methods(true)) - native_instance_methods
         klass_m                 = subject.methods(false).concat(subject.private_methods(false)) - Object.methods
-        methods.concat super_instance_methods.reverse.map { |method| InstanceMethod.new("#{subject.name}##{method}", context: subject, visibility: :super) }
-        methods.concat native_instance_methods.map { |method| InstanceMethod.new("#{subject.name}##{method}", context: subject, visibility: :native) }
-        methods.concat klass_m.map { |method| ClassMethod.new("#{subject.name}.#{method}", context: subject) }
+        methods.concat super_instance_methods.reverse.map { |method| InstanceMethod.new("#{subject.name}##{method}", context: subject, visibility: :super, file_path: subject_location) }
+        methods.concat native_instance_methods.map { |method| InstanceMethod.new("#{subject.name}##{method}", context: subject, visibility: :native, file_path: subject_location) }
+        methods.concat klass_m.map { |method| ClassMethod.new("#{subject.name}.#{method}", context: subject, file_path: subject_location) }
       end
 
       def methods_pipeline

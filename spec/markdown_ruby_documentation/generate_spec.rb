@@ -50,14 +50,6 @@ RSpec.describe MarkdownRubyDocumentation::Generate do
     end
   end
 
-  # before do
-  #   stub_const("MarkdownRubyDocumentation::GitHubLink", NullMethodPipe)
-  #   expect_any_instance_of(NullMethodPipe)
-  #     .to receive(:call) { |args|
-  #       expect(convert_method_hash(args)).to eq({ :the_sum_of_a_and_b => "This is an important part of the logic\n```ruby\n2 + 4\n```\n```javascript\n{\"abc\":\"123\",\"xyz\":\"890\"}\n```\n" })
-  #     }.and_call_original
-  # end
-
   before do
     @output = {}
     allow(output_object).to receive(:call) do |name:, text:|
@@ -68,7 +60,7 @@ RSpec.describe MarkdownRubyDocumentation::Generate do
   let(:output_object){ double("output_object", relative_dir: "spec") }
 
   it "saves a markdown file with generated docs" do
-    described_class.run(subjects:    [Namespace::DocumentMe],
+    described_class.run(subjects:    [{class: Namespace::DocumentMe, file_path: ""}],
                         load_path: "save_location",
                                  output_object: output_object)
     expect(@output["Namespace::DocumentMe"]).to eq <<~MD
@@ -90,7 +82,7 @@ RSpec.describe MarkdownRubyDocumentation::Generate do
   end
 
   it "structure" do
-    pages = described_class.run(subjects: [Namespace::DocumentMe], load_path: "load_path", output_object: output_object)
+    pages = described_class.run(subjects: [{class: Namespace::DocumentMe, file_path: ""}], load_path: "load_path", output_object: output_object)
     expect(pages).to eq({ "Namespace" => { "DocumentMe" => pages["Namespace"]["DocumentMe"] } })
   end
 end

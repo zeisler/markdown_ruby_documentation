@@ -41,10 +41,43 @@ module MarkdownRubyDocumentation
       end
 
       def ruby_class_meth_comment(method)
-        method.context.public_send(method.type, method.name).comment
-
+        comment = method.context.public_send(method.type, method.name).comment
+        if comment.blank?
+          look_for_class_macro_comment(method)
+        else
+          comment
+        end
       rescue MethodSource::SourceNotFoundError => e
         raise e.class, "#{ method.context}#{method.type_symbol}#{method.name}, \n#{e.message}"
+      end
+
+      CLASS_MACROS = [:attribute]
+      def source_location(file_path, name)
+        return unless file_path && name
+        found_match = nil
+        CLASS_MACROS.each do |macro|
+          if (ln = get_line_number(file_path.split(":").first, "#{macro} #{Regexp.escape(name.inspect)}"))
+            found_match = ln
+          end
+        end
+        [file_path, found_match] if found_match
+      end
+
+      def get_line_number(file, word)
+        return unless file && word
+        count = 0
+        file_or_result = File.open(file, "r") { |file| file.each_line { |line|
+          count += 1
+          return count if line =~ /^[\s]*#{word}/
+        }}
+        file_or_result.is_a?(File) ? nil : file_or_result
+      end
+
+      def look_for_class_macro_comment(method)
+        return "" unless (sl = source_location(method.file_path, method.name))
+        MethodSource.comment_helper(sl, method.name).tap do |comment|
+          method.line_no = sl[1] unless comment.blank?
+        end
       end
 
       def ruby_class_meth_source_location(method)

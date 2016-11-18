@@ -9,6 +9,27 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
   end
 
   describe "#to_hash" do
+
+    context "documenting class macro methods" do
+      let!(:ruby_class) {
+        class Test
+          def self.attribute(name)
+            define_method(name){}
+          end
+
+          #=mark_doc
+          # This holds the user's first name
+          attribute :first_name
+          attribute :last_name
+        end
+      }
+
+      it "complies comments references" do
+        result = described_class.new(Test, [MarkdownRubyDocumentation::InstanceMethod.new("#first_name", context: Test, file_path: __FILE__)]).to_hash
+        expect(convert_method_hash(result)).to eq({ first_name: "This holds the user's first name\n" })
+      end
+    end
+
     context "COMMENT_REF:" do
       let!(:ruby_class) {
         class Test
@@ -195,7 +216,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it do
         result = described_class.new(Test, [:method2]).to_hash
 
-        expect(convert_method_hash result).to eq({ method2: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb#L189\nhttps://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb\n" })
+        expect(convert_method_hash result).to eq({ method2: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb#L210\nhttps://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb\n" })
       end
     end
 
@@ -422,11 +443,11 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
           result = described_class.new(Test10, [:i_add_stuff]).to_hash
 
           expect(convert_method_hash result).to eq({ :i_add_stuff => <<~MARKDOWN})
-          if true
-          [MAX_COMBINED_LIEN_TO_VALUE_RATIO_SAN_DIEGO](#max-combined-lien-to-value-ratio-san-diego)
-          else
-          [MAX_COMBINED_LIEN_TO_VALUE_RATIO_UCCC](#max-combined-lien-to-value-ratio-uccc)
-          end
+            if true
+            [MAX_COMBINED_LIEN_TO_VALUE_RATIO_SAN_DIEGO](#max-combined-lien-to-value-ratio-san-diego)
+            else
+            [MAX_COMBINED_LIEN_TO_VALUE_RATIO_UCCC](#max-combined-lien-to-value-ratio-uccc)
+            end
           MARKDOWN
         end
       end
@@ -667,7 +688,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
           result = described_class.new(Test, [:i_add_stuff]).to_hash
 
           expect(convert_method_hash result).to eq({ :i_add_stuff => <<~TEXT })
-           [Bang Method!](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#bang-method)
+            [Bang Method!](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#bang-method)
           TEXT
         end
       end
@@ -708,8 +729,8 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
           result = described_class.new(Test, [:i_add_stuff]).to_hash
 
           expect(convert_method_hash result).to eq({ :i_add_stuff => <<~TEXT })
-           array = []
-           array is any? empty?
+            array = []
+            array is any? empty?
           TEXT
         end
       end

@@ -3,6 +3,7 @@ RSpec.describe MarkdownRubyDocumentation::ConstantsPresenter do
     CONSTANT_NUM    = 10_000
     CONSTANT_STRING = "hello"
     MY_MUTEX = Mutex.new
+    MY_REGEX = /a/
   end
 
   describe "#call" do
