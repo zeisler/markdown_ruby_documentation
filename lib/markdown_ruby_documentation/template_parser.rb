@@ -130,7 +130,8 @@ module MarkdownRubyDocumentation
         :remove_end_keyword,
         :constants_with_name_and_value,
         :remove_memoized_vars,
-        :comment_format
+        :comment_format,
+        :rescue_format
       ]
 
       def ruby_to_markdown(*args)
@@ -151,6 +152,13 @@ module MarkdownRubyDocumentation
           end
         end
         ruby_source
+      end
+
+      def rescue_format(source_code=print_method_source, proc: false)
+        gsub_replacement(source_code, {
+          /=>\s.*/                     => "",
+          /rescue ([a-zA-Z0-9::]*)./ => "Given a failure of \\1 __Then__\n",
+        }, proc: proc)
       end
 
       def comment_format(source_code=print_method_source, proc: false)

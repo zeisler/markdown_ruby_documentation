@@ -30,6 +30,30 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       end
     end
 
+    context "ruby_to_markdown rescue_format" do
+      let!(:ruby_class) {
+        class Test
+          #=mark_doc
+          # <%= ruby_to_markdown %>
+          def method1
+            1/0
+          rescue ZeroDivisionError => e
+            1 + 1
+          end
+        end
+      }
+
+      it "complies comments references" do
+        result = described_class.new(Test, [:method1]).to_hash
+        expect(convert_method_hash(result)[:method1]).to eq(<<-TEXT.strip_heredoc)
+        1/0
+        Given a failure of ZeroDivisionError __Then__
+
+        1 + 1
+        TEXT
+      end
+    end
+
     context "COMMENT_REF:" do
       let!(:ruby_class) {
         class Test
