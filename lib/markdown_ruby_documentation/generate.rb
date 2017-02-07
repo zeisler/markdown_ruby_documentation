@@ -99,10 +99,12 @@ module MarkdownRubyDocumentation
       def all_instance_and_class_methods(methods, subject, subject_location)
         native_instance_methods = (subject.instance_methods(false) - Object.instance_methods(false)).concat(subject.private_instance_methods(false) - Object.private_instance_methods(false))
         super_instance_methods  = (subject.instance_methods(true) - Object.instance_methods(true)).concat(subject.private_instance_methods(true) - Object.private_instance_methods(true)) - native_instance_methods
-        klass_m                 = subject.methods(false).concat(subject.private_methods(false)) - Object.methods
+        native_klass_methods    = (subject.methods(false) - Object.methods(false)).concat(subject.private_methods(false) - Object.private_methods(false))
+        super_klass_methods     = (subject.methods(true) - Object.methods(true)).concat(subject.private_methods(true) - Object.private_methods(true)) - native_klass_methods
         methods.concat super_instance_methods.reverse.map { |method| InstanceMethod.new("#{subject.name}##{method}", context: subject, visibility: :super, file_path: subject_location) }
         methods.concat native_instance_methods.map { |method| InstanceMethod.new("#{subject.name}##{method}", context: subject, visibility: :native, file_path: subject_location) }
-        methods.concat klass_m.map { |method| ClassMethod.new("#{subject.name}.#{method}", context: subject, file_path: subject_location) }
+        methods.concat super_klass_methods.map { |method| ClassMethod.new("#{subject.name}.#{method}", context: subject, visibility: :super, file_path: subject_location) }
+        methods.concat native_klass_methods.map { |method| ClassMethod.new("#{subject.name}.#{method}", context: subject, visibility: :native, file_path: subject_location) }
       end
 
       def methods_pipeline
