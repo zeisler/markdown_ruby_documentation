@@ -43,7 +43,7 @@ module MarkdownRubyDocumentation
         unless lineno.nil?
           str << "#L#{lineno}"
         end
-        str.chomp.gsub("https://github.com///github.com/", "https://github.com")
+        str.chomp.gsub("https://github.com///github.com/", "https://github.com/")
       end
 
       def blob(file)
