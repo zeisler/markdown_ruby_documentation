@@ -420,10 +420,11 @@ module MarkdownRubyDocumentation
 
       def ruby_if_statement_to_md(ruby_source, proc: false)
         conversions = {
-          /elsif(.*)/         => "* __Else If__\\1\n__Then__",
-          /^\s?if(.*)/ => "* __If__\\1\n__Then__",
-          /unless(.*)/        => "* __Unless__\\1\n__Then__",
-          "else"              => "* __Else__"
+          /elsif(.*)/                    => "* __Else If__\\1\n__Then__",
+          /^\s?if(.*)\s([|&]{0,2})\n(.*)/ => "* __If__\\1 \\2 \\3\n__Then__",
+          /^\s?if(.*)/                   => "* __If__\\1\n__Then__",
+          /unless(.*)/                   => "* __Unless__\\1\n__Then__",
+          "else"                         => "* __Else__"
         }
         gsub_replacement(ruby_source, conversions, proc: proc)
       end

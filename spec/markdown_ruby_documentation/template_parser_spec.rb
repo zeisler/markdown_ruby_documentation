@@ -30,6 +30,36 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       end
     end
 
+    context "expression that continues on new line" do
+      let!(:ruby_class) {
+        class Test
+          #=mark_doc
+          # <%= ruby_to_markdown %>
+          def attribute(special_jurisdiction_checker)
+            if special_jurisdiction_checker.state(:ca).incorporated_city?([:san_diego, :chula_vista]) ||
+              special_jurisdiction_checker.state(:ca).unincorporated_region.county?(:contra_costa)
+              true
+            else
+              false
+            end
+          end
+        end
+      }
+
+      it "complies comments references" do
+        result = described_class.new(Test, [MarkdownRubyDocumentation::InstanceMethod.new("#attribute", context: Test, file_path: __FILE__)]).to_hash
+        expect(convert_method_hash(result)[:attribute]).to eq(<<-TEXT.strip_heredoc)
+        * __If__ special_jurisdiction_checker.state(:ca).incorporated_city?([:san_diego, :chula_vista]) or special_jurisdiction_checker.state(:ca).unincorporated_region is county?(:contra_costa)
+        __Then__
+        true
+        * __Else__
+        false
+
+        TEXT
+      end
+    end
+
+
     context "ruby_to_markdown rescue_format" do
       let!(:ruby_class) {
         class Test
@@ -240,7 +270,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it do
         result = described_class.new(Test, [:method2]).to_hash
 
-        expect(convert_method_hash result).to eq({ method2: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb#L234\nhttps://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb\n" })
+        expect(convert_method_hash result).to eq({ method2: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb#L#{__LINE__-9}\nhttps://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb\n" })
       end
     end
 
