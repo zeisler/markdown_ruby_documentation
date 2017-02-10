@@ -145,11 +145,16 @@ module MarkdownRubyDocumentation
 
         RUBY_TO_MARKDOWN_PROCESSORS.each do |processor|
           options     = disable_processors.fetch(processor, :enabled)
-          ruby_source =  if options == :enabled
-            send(processor, ruby_source)
-          elsif options.is_a?(Hash)
-            send(processor, ruby_source, options)
-          end
+          ruby_source = case options
+                        when :enabled
+                          send(processor, ruby_source)
+                        when Hash
+                          send(processor, ruby_source, options)
+                        when Proc
+                          send(processor, ruby_source, proc: options)
+                        else
+                          ruby_source
+                        end
         end
         ruby_source
       end
