@@ -1,6 +1,6 @@
 module MarkdownRubyDocumentation
   class AnyArgs
-    attr_reader :source_code
+    attr_reader :disable_processors, :source_code
 
     def initialize(args:, print_method_source:, caller:, for_method:, method_creator:)
       @args                = args
