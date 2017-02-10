@@ -119,6 +119,7 @@ Converts case statements and if statements to bulleted markdown
 * constants_with_name_and_value, options: proc(replacement, match, opt={})
 * remove_memoized_vars, options: proc(replacement, match)
 * rescue_format,  options: proc(replacement, match)
+* boolean_blocks, options: proc(replacement, match)
 
 
 #### `format_link`

@@ -124,6 +124,7 @@ module MarkdownRubyDocumentation
         :ruby_case_statement_to_md,
         :ruby_operators_to_english,
         :nil_check_readable,
+        :boolean_blocks,
         :question_mark_method_format,
         :symbol_to_proc,
         :methods_as_local_links,
@@ -131,7 +132,7 @@ module MarkdownRubyDocumentation
         :constants_with_name_and_value,
         :remove_memoized_vars,
         :comment_format,
-        :rescue_format
+        :rescue_format,
       ]
 
       def ruby_to_markdown(*args)
@@ -157,6 +158,13 @@ module MarkdownRubyDocumentation
                         end
         end
         ruby_source
+      end
+
+      def boolean_blocks(source_code=print_method_source, proc: false)
+        gsub_replacement(source_code, {
+          /(.*)\.any\?\s*do\s\|.*\|/ => "Are there any \\1 where\n",
+          /(.*)\.all\?\s*do\s\|.*\|/ => "Do all \\1 have\n",
+        }, proc: proc)
       end
 
       def rescue_format(source_code=print_method_source, proc: false)
@@ -376,7 +384,7 @@ module MarkdownRubyDocumentation
                                  method_to_class: {},
                                  proc: false)
         ruby_source.gsub(MethodLink::RUBY_METHOD_REGEX) do |match|
-          if is_a_method_on_ruby_class?(match)
+          if is_a_method_on_ruby_class?(match, method_to_class[match.to_sym] || ruby_class)
             replacement = MethodLink.new(match:            match,
                                          ruby_class:       ruby_class,
                                          call_on_title:    call_on_title,
@@ -488,8 +496,8 @@ module MarkdownRubyDocumentation
         source_code = source_code.gsub(/[a-z_?!0-9]+:/, &block)
       end
 
-      def is_a_method_on_ruby_class?(method)
-        [*ruby_class.public_instance_methods, *ruby_class.private_instance_methods].include?(remove_quotes(method).to_sym)
+      def is_a_method_on_ruby_class?(method, klass=ruby_class)
+        [*klass.public_instance_methods, *klass.private_instance_methods].include?(remove_quotes(method).to_sym)
       end
 
       def remove_quotes(string)

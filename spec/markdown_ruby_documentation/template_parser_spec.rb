@@ -59,6 +59,64 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       end
     end
 
+    context "ruby_to_markdown methods_as_local_links method_to_class" do
+      let!(:ruby_class) {
+
+        class Checker
+          def call
+
+          end
+        end
+
+        class Test
+          #=mark_doc
+          # <%= ruby_to_markdown methods_as_local_links: { method_to_class: { call: Checker } } %>
+          def attribute(checker)
+            checker.call
+          end
+        end
+      }
+
+      it "provides the type for a local variable" do
+        result = described_class.new(Test, [MarkdownRubyDocumentation::InstanceMethod.new("#attribute", context: Test, file_path: __FILE__)]).to_hash
+        expect(convert_method_hash(result)[:attribute]).to eq(<<-TEXT.strip_heredoc)
+        checker.[Call](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/checker.md#call)
+        TEXT
+      end
+    end
+
+
+    context "ruby_to_markdown boolean_blocks" do
+      let!(:ruby_class) {
+        class Test
+          #=mark_doc
+          # <%= ruby_to_markdown %>
+          def attribute
+            [1,2,3].any? do |number|
+              number == 3
+            end
+
+            [1,2,3].all? do |number|
+              number == 3
+            end
+          end
+        end
+      }
+
+      it "provides the type for a local variable" do
+        result = described_class.new(Test, [MarkdownRubyDocumentation::InstanceMethod.new("#attribute", context: Test, file_path: __FILE__)]).to_hash
+        expect(convert_method_hash(result)[:attribute]).to eq(<<-TEXT.strip_heredoc)
+        Are there any [1,2,3] where
+
+        number Equal to 3
+
+        Do all [1,2,3] have
+        
+        number Equal to 3
+
+        TEXT
+      end
+    end
 
     context "ruby_to_markdown rescue_format" do
       let!(:ruby_class) {
