@@ -211,10 +211,14 @@ module MarkdownRubyDocumentation
           "&&"   => "and",
           ">="   => "is greater than or equal to",
           "<="   => "is less than or equal to",
-          " < "  => " is less than ",
-          " > "  => " is greater than ",
-          " == " => " Equal to ",
-          "||"   => "or"
+          " < "   => " is less than ",
+          " > "   => " is greater than ",
+          " == "  => " Equal to ",
+          "||"    => "or",
+          /^!!/  => "",
+          /\s!!/ => " ",
+          /^!/   => "*is not* ",
+          /\s!/  => " *is not* "
         }
 
         gsub_replacement(source_code, conversions, proc: proc)
