@@ -4,13 +4,20 @@ RSpec.describe MarkdownRubyDocumentation::ClassLevelComment do
   # This is line 2
   #=mark_end
   class ToBeDocumented
+    extend Forwardable
     def here_as_anchor
 
     end
+
+    def_delegator :here_as_anchor, :abc
   end
 
   let(:interface) {
     {
+      abc: {
+        text:          "",
+        method_object: MarkdownRubyDocumentation::Method.create("ToBeDocumented#abc", visibility: :native)
+      },
       here_as_anchor: {
         text:          "",
         method_object: MarkdownRubyDocumentation::Method.create("ToBeDocumented#here_as_anchor", visibility: :native)
