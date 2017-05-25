@@ -10,6 +10,8 @@ RSpec.describe MarkdownRubyDocumentation::ClassLevelComment do
     end
 
     def_delegator :here_as_anchor, :abc
+
+    NAME = 1
   end
 
   let(:interface) {
@@ -21,6 +23,10 @@ RSpec.describe MarkdownRubyDocumentation::ClassLevelComment do
       here_as_anchor: {
         text:          "",
         method_object: MarkdownRubyDocumentation::Method.create("ToBeDocumented#here_as_anchor", visibility: :native)
+      },
+      null_method: {
+        text:          "",
+        method_object: MarkdownRubyDocumentation::Method.create("ToBeDocumented::NAME", null_method: true)
       },
     }
   }

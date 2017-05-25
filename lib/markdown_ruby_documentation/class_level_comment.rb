@@ -8,11 +8,10 @@ module MarkdownRubyDocumentation
 
     def call(interface)
       _method = interface.reject do |_, meth|
-        meth[:source_location] = meth[:method_object].to_proc.source_location
-        meth[:method_object].is_a?(NullMethod) || meth[:method_object].visibility != :native || meth[:source_location].first.include?(RUBY_VERSION)
+        meth[:method_object].is_a?(NullMethod) || meth[:method_object].visibility != :native || meth[:method_object].to_proc.source_location.first.include?(RUBY_VERSION)
       end.first
       if _method
-        filename, lineno = _method[1][:source_location]
+        filename, lineno = _method[1][:method_object].to_proc.source_location
         comment = extract_dsl_comment(strip_comment_hash(comment(filename, lineno)+"\n"))
         interface[:class_level_comment] = { text: comment }
       end
