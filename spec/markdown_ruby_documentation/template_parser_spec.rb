@@ -13,20 +13,32 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
     context "documenting class macro methods" do
       let!(:ruby_class) {
         class Test
+          extend Forwardable
           def self.attribute(name)
             define_method(name){}
+          end
+
+          def person
           end
 
           #=mark_doc
           # This holds the user's first name
           attribute :first_name
           attribute :last_name
+          #=mark_doc
+          # This holds the user's full name
+          def_delegator :person, :full_name
         end
       }
 
-      it "complies comments references" do
+      it "attribute" do
         result = described_class.new(Test, [MarkdownRubyDocumentation::InstanceMethod.new("#first_name", context: Test, file_path: __FILE__)]).to_hash
         expect(convert_method_hash(result)).to eq({ first_name: "This holds the user's first name\n" })
+      end
+
+      it "def_delegator" do
+        result = described_class.new(Test, [MarkdownRubyDocumentation::InstanceMethod.new("#full_name", context: Test, file_path: __FILE__)]).to_hash
+        expect(convert_method_hash(result)).to eq({ full_name: "This holds the user's full name\n" })
       end
     end
 

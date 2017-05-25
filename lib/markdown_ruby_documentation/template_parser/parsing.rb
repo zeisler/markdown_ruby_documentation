@@ -51,12 +51,15 @@ module MarkdownRubyDocumentation
         raise e.class, "#{ method.context}#{method.type_symbol}#{method.name}, \n#{e.message}"
       end
 
-      CLASS_MACROS = [:attribute]
+      CLASS_MACROS = [
+        ->(name) {"attribute #{Regexp.escape(name.inspect)}"},
+        ->(name) {"def_delegator :.*, #{Regexp.escape(name.inspect)}"},
+      ]
       def source_location(file_path, name)
         return unless file_path && name
         found_match = nil
         CLASS_MACROS.each do |macro|
-          if (ln = get_line_number(file_path.split(":").first, "#{macro} #{Regexp.escape(name.inspect)}"))
+          if (ln = get_line_number(file_path.split(":").first, macro.call(name)))
             found_match = ln
           end
         end
