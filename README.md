@@ -1,6 +1,12 @@
 # MarkdownRubyDocumentation
+Documentation DSL that provides method level comments and links or imports to other comments. 
+Comments can be written in MarkDown format and the current method can be transformed from Ruby code into a MarkDown readable format.
+Static instance, class methods, and constants can be called and used inside of ERB tags.
+All defined areas are generated into markdown file per class.
 
-Gem provides the ability to use markdown and ruby ERB with some helper methods inside of comments. The comment area then can be generated into a markdown file.
+## Why should you use this?
+
+Allows creating business or technical documentation that can stays automatically in sync with Ruby Logic and available data.
 
 ## Installation
 
@@ -27,7 +33,7 @@ class RubyClassToBeInspected
   #=mark_doc
   # **I am Documentation**
   # <%= print_method_source "#i_am_a_documented_method" %>
-  # ^`MY_VALUE`
+  # <%= MY_VALUE %>
   #=mark_end
   def i_am_a_documented_method
     "Hello"
@@ -53,17 +59,22 @@ MarkdownRubyDocumentation::Generate.run(
 
 **I am Documentation**
 "Hello"
-[MY_VALUE](/ruby_class_to_be_inspected#my_value)
+10
 
 ```
 
 ### ERB Methods
 
+### String Method Reference (method)
+* Call an instance method in the current context with `"#method_name"` (Limitations: methods cannot take any arguments or depend on any uninitialized state, they may call other methods that follow this same requirements.)
+* Call an class method in the current context with `".method_name"`
+* Call an instance method from another class `"OtherClass#method_name"`
+
 #### `print_method_source(method)`
 The source of a method block returned as text.
 
 #### `eval_method(method)`
-The result of evaluating a method.
+The result of evaluating a method. 
 
 #### `print_mark_doc_from(method)`
 Prints out the mark doc from another method.
@@ -79,7 +90,7 @@ Creates a url to the file on GitHub based on the current sha or it defaults to m
 
 ##### `link_to_markdown` or `link_to`(klass_or_path, title: String)
 @param [Class, String, Pathname] klass_or_path
-  1. String or Class representing a method reference
+  1. String or Class representing a method reference ie. MyObject#call, MyObject.name
   2. Pathname representing the full path of the file location a method is defined
 @param [String] title is the link display value
 @return [String, Symbol] Creates link to a given generated markdown file or returns :non_project_location message.

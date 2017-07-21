@@ -9,8 +9,11 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Dustin Zeisler"]
   spec.email         = ["dustin@zeisler.net"]
 
-  spec.summary       = %q{Gem provides the ability to use markdown and ruby ERB with some helper methods inside of comments}
-  spec.description   = %q{Gem provides the ability to use markdown and ruby ERB with some helper methods inside of comments. The comment area then can be generated into a markdown file.}
+  spec.summary       = %q{Allows creating business or technical documentation that can stays automatically in sync with Ruby Logic and available data.}
+  spec.description   = %q{Documentation DSL that provides method level comments and links or imports to other comments.
+Comments can be written in MarkDown format and the current method can be transformed from Ruby code into a MarkDown readable format.
+Static instance, class methods, and constants can be called and used inside of ERB tags.
+All defined areas are generated into markdown file per class.}
   spec.homepage      = "https://github.com/zeisler/markdown_ruby_documentation"
   spec.license       = "MIT"
 
