@@ -12,20 +12,20 @@ RSpec.describe MarkdownRubyDocumentation::RelativeLinkConverter do
   end
 
   let(:text) do
-    %w{
-      [link](https://github.com/zeisler/markdown_ruby_documentation/blob/master/path/hello/world.md#anchor)
-      [link](https://github.com/zeisler/markdown_ruby_documentation/blob/master/path/hello/world.md)
-      [link9](https://github.com/zeisler/markdown_ruby_documentation/blob/master/path/goodbye/world.md#anchor)
-      [link_a-b](https://github.com/zeisler/markdown_ruby_documentation/blob/master/path/hello/world.md#anchor)
-      [Exception?](https://github.com/zeisler/markdown_ruby_documentation/blob/master/path/hello/world.md#exception)
+    %W{
+      [link](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/path/hello/world.md#anchor)
+      [link](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/path/hello/world.md)
+      [link9](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/path/goodbye/world.md#anchor)
+      [link_a-b](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/path/hello/world.md#anchor)
+      [Exception?](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/path/hello/world.md#exception)
     }.join("\n")
   end
 
   it do
-    expect(subject.call(text).split("\n")).to eq(%w{
+    expect(subject.call(text).split("\n")).to eq(%W{
         [link](#anchor)
-        [link](https://github.com/zeisler/markdown_ruby_documentation/blob/master/path/hello/world.md)
-        [link9](https://github.com/zeisler/markdown_ruby_documentation/blob/master/path/goodbye/world.md#anchor)
+        [link](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/path/hello/world.md)
+        [link9](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/path/goodbye/world.md#anchor)
         [link_a-b](#anchor)
         [Exception?](#exception)
      })
@@ -33,7 +33,7 @@ RSpec.describe MarkdownRubyDocumentation::RelativeLinkConverter do
 
   context "Other case" do
     let(:text) do
-      "* __If__ [Exception?](https://github.com/zeisler/markdown_ruby_documentation/blob/master/path/hello/world.md#exception) { [Owners Mortgage Balance](#owners-mortgage-balance) }"
+      "* __If__ [Exception?](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/path/hello/world.md#exception) { [Owners Mortgage Balance](#owners-mortgage-balance) }"
     end
 
     it do
@@ -52,7 +52,7 @@ RSpec.describe MarkdownRubyDocumentation::RelativeLinkConverter do
       double("output_object", relative_dir: "doc/rules")
     }
     let(:text) do
-      "[Decision From Override](https://github.com/zeisler/markdown_ruby_documentation/blob/master/doc/rules/decision_engine/rules/ofac.md#decision-from-override) or [Decision From Rule](https://github.com/zeisler/markdown_ruby_documentation/blob/master/doc/rules/decision_engine/rules/ofac.md#decision-from-rule)"
+      "[Decision From Override](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/doc/rules/decision_engine/rules/ofac.md#decision-from-override) or [Decision From Rule](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/doc/rules/decision_engine/rules/ofac.md#decision-from-rule)"
     end
 
     it do

@@ -92,7 +92,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it "provides the type for a local variable" do
         result = described_class.new(Test, [MarkdownRubyDocumentation::InstanceMethod.new("#attribute", context: Test, file_path: __FILE__)]).to_hash
         expect(convert_method_hash(result)[:attribute]).to eq(<<-TEXT.strip_heredoc)
-        checker.[Call](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/checker.md#call)
+        checker.[Call](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/spec/checker.md#call)
         TEXT
       end
     end
@@ -340,7 +340,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it do
         result = described_class.new(Test, [:method2]).to_hash
 
-        expect(convert_method_hash result).to eq({ method2: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb#L#{__LINE__-9}\nhttps://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/template_parser_spec.rb\n" })
+        expect(convert_method_hash result).to eq({ method2: "https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/spec/markdown_ruby_documentation/template_parser_spec.rb#L#{__LINE__-9}\nhttps://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/spec/markdown_ruby_documentation/template_parser_spec.rb\n" })
       end
     end
 
@@ -378,7 +378,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it "gets the git hub url for that constant" do
         result = described_class.new(Test, [:method10]).to_hash
 
-        expect(convert_method_hash result).to eq({ method10: "https://github.com/zeisler/markdown_ruby_documentation/blob/master/lib/markdown_ruby_documentation/template_parser.rb#L10\n" })
+        expect(convert_method_hash result).to eq({ method10: "https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/lib/markdown_ruby_documentation/template_parser.rb#L10\n" })
       end
     end
 
@@ -459,7 +459,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
       it "returns the commented method name" do
         result = described_class.new(Test, [:i_add_stuff]).to_hash
 
-        expect(convert_method_hash result).to eq({ :i_add_stuff => "[i_return_one](http://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#i-return-one) + [i_return_two?](http://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#i-return-two) + \"hello\"\n* __When__\n" })
+        expect(convert_method_hash result).to eq({ :i_add_stuff => "[i_return_one](http://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/spec/test.md#i-return-one) + [i_return_two?](http://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/spec/test.md#i-return-two) + \"hello\"\n* __When__\n" })
       end
     end
 
@@ -640,9 +640,9 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
             * __Given__
             * __When__ true
             __Then__
-            'unavailable' + [This Thing Works?](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#this-thing-works)
+            'unavailable' + [This Thing Works?](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/spec/test.md#this-thing-works)
             * __Else__
-            'eligible' + [Public 1method](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#public-1method)
+            'eligible' + [Public 1method](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/spec/test.md#public-1method)
 
             * __Given__ true
             * __When__ true
@@ -704,20 +704,20 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
 
           expect(convert_method_hash result).to eq({ :decision_from_rule => <<~TEXT })
             * __Given__
-            * __When__ [Data Unavailable?](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#data-unavailable)
+            * __When__ [Data Unavailable?](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/spec/test.md#data-unavailable)
             __Then__
             'unavailable'
-            * __When__ [Declared Bankruptcy Recently?](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#declared-bankruptcy-recently)(with_in_years: [Bankruptcy Allowed Years Ago](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#bankruptcy-allowed-years-ago))
+            * __When__ [Declared Bankruptcy Recently?](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/spec/test.md#declared-bankruptcy-recently)(with_in_years: [Bankruptcy Allowed Years Ago](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/spec/test.md#bankruptcy-allowed-years-ago))
             __Then__
             'decline'
-            * __When__ [Address](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#address) is los_angeles_county?
+            * __When__ [Address](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/spec/test.md#address) is los_angeles_county?
             __Then__
             'decline'
             * __Else__
             'eligible'
 
             * __Given__
-            * __When__ [Address](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#address) is missing?
+            * __When__ [Address](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/spec/test.md#address) is missing?
             __Then__
             'bankruptcy_declared'
 
@@ -780,9 +780,9 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
             * __Given__
             * __When__ true
             __Then__
-            'unavailable' and [this_thing_works?](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#this-thing-works)
+            'unavailable' and [this_thing_works?](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/spec/test.md#this-thing-works)
             * __Else__
-            'eligible' + [public_1method](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#public-1method)
+            'eligible' + [public_1method](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/spec/test.md#public-1method)
 
             * __Given__ true
             * __When__ true
@@ -812,7 +812,7 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
           result = described_class.new(Test, [:i_add_stuff]).to_hash
 
           expect(convert_method_hash result).to eq({ :i_add_stuff => <<~TEXT })
-            [Bang Method!](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/test.md#bang-method)
+            [Bang Method!](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/spec/test.md#bang-method)
           TEXT
         end
       end

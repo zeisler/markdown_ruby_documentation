@@ -64,8 +64,8 @@ RSpec.describe MarkdownRubyDocumentation::Generate do
                         load_path: "save_location",
                                  output_object: output_object)
     expect(@output["Namespace::DocumentMe"]).to eq <<~MD
-      # Document Me < [Super Thing](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/namespace/super_thing.md)
-      Descendants: [Other Thing](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/namespace/other_thing.md)
+      # Document Me < [Super Thing](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/spec/namespace/super_thing.md)
+      Descendants: [Other Thing](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/spec/namespace/other_thing.md)
 
       ## The Sum Of A And B
       This is an important part of the logic
@@ -76,7 +76,7 @@ RSpec.describe MarkdownRubyDocumentation::Generate do
       {"abc":"123","xyz":"890"}
       ```
 
-      [show on github](https://github.com/zeisler/markdown_ruby_documentation/blob/master/spec/markdown_ruby_documentation/generate_spec.rb#L17)
+      [show on github](https://github.com/zeisler/markdown_ruby_documentation/blob/#{MarkdownRubyDocumentation::GitHubProject.branch}/spec/markdown_ruby_documentation/generate_spec.rb#L17)
 
     MD
   end
