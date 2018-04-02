@@ -68,12 +68,7 @@ module MarkdownRubyDocumentation
 
       def get_line_number(file, word)
         return unless file && word
-        count = 0
-        file_or_result = File.open(file, "r") { |file| file.each_line { |line|
-          count += 1
-          return count if line =~ /^[\s]*#{word}/
-        }}
-        file_or_result.is_a?(File) ? nil : file_or_result
+        `grep -nr -m 1 "^[\s]*#{word}" #{file}`.match(/#{file}:(\d*)/).to_a[1].try!(:to_i)
       end
 
       def look_for_class_macro_comment(method)
@@ -88,13 +83,7 @@ module MarkdownRubyDocumentation
       end
 
       def extract_dsl_comment(comment_string)
-        if (v = when_start_and_end(comment_string))
-          v
-        elsif (x = when_only_start(comment_string))
-          x
-        else
-          ""
-        end
+        [when_start_and_end(comment_string), when_only_start(comment_string), ""].compact.first
       end
 
       def when_start_and_end(comment_string)
