@@ -8,23 +8,29 @@ module MarkdownRubyDocumentation
     end
 
     def title
-      [format_class(subject), *ancestors.map { |a| create_link(a) }].join(" < ")
+      [format_class(subject), *ancestors_links].join(" < ")
     end
 
     def summary
-      "Descendants: #{descendants_links}" if descendants.count >= 1
+      "Descendants: #{descendants_links.join(", ")}" if descendants.present?
     end
 
     private
 
+    def ancestors_links
+      ancestors.map(&method(:create_link))
+    end
+
     def descendants_links
-      descendants.map { |d| create_link(d) }.join(", ")
+      descendants.map(&method(:create_link))
     end
 
     def descendants
-      @descendants ||= ObjectSpace.each_object(Class).select do |klass|
-        klass < subject && !(klass == InstanceToClassMethods)
-      end.sort_by(&:name)
+      @descendants ||= begin
+        ObjectSpace.each_object(Class).select do |klass|
+          klass.try!(:name) && klass < subject && !(klass.name.to_s.include?("InstanceToClassMethods"))
+        end.sort_by(&:name)
+      end
     end
 
     def ancestors
