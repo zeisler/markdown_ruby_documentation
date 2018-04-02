@@ -17,7 +17,7 @@ module MarkdownRubyDocumentation
 
     def self.format(value)
       case value
-      when Fixnum
+      when Numeric
         ActiveSupport::NumberHelper.number_to_delimited(value)
       when String
         value.inspect
