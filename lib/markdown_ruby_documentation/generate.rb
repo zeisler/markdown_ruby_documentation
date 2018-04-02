@@ -25,14 +25,16 @@ module MarkdownRubyDocumentation
         batches           = subjects.each_slice(parallel_config.fetch(:in_threads, 2))
         threads           = []
         batches.each do |batch|
-          threads << Thread.new(batch) do |(_batch)|
-          Array[_batch].flatten.map do |subject|
-            progressbar.title = subject.fetch(:class).name.ljust(left_padding)
-            Page.new(subject_class:       subject.fetch(:class),
-                     subject_location:    subject.fetch(:file_path).to_s,
-                       output_object:     output_object,
-                       erb_methods_class: erb_methods_class,
-                       load_path:         load_path).call.tap { progressbar.increment }
+          threads << Thread.new(batch) do |inner_batch|
+            Array[inner_batch].flatten.map do |subject|
+              progressbar.title = subject.fetch(:class).name.ljust(left_padding)
+              Page.new(
+                subject_class:     subject.fetch(:class),
+                subject_location:  subject.fetch(:file_path).to_s,
+                output_object:     output_object,
+                erb_methods_class: erb_methods_class,
+                load_path:         load_path
+              ).call.tap { progressbar.increment }
             end
           end
         end
