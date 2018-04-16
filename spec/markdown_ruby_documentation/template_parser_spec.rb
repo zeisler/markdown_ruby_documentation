@@ -28,6 +28,9 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
           #=mark_doc
           # This holds the user's full name
           def_delegator :person, :full_name
+          #=mark_doc
+          # This holds the user's sir name
+          def_delegator :person, :sir_name
         end
       }
 
@@ -36,9 +39,16 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
         expect(convert_method_hash(result)).to eq({ first_name: "This holds the user's first name\n" })
       end
 
-      it "def_delegator" do
-        result = described_class.new(Test, [MarkdownRubyDocumentation::InstanceMethod.new("#full_name", context: Test, file_path: __FILE__)]).to_hash
-        expect(convert_method_hash(result)).to eq({ full_name: "This holds the user's full name\n" })
+      context "def_delegator" do
+        it "full_name" do
+          result = described_class.new(Test, [MarkdownRubyDocumentation::InstanceMethod.new("#full_name", context: Test, file_path: __FILE__)]).to_hash
+          expect(convert_method_hash(result)).to eq({ full_name: "This holds the user's full name\n" })
+        end
+
+        it "sir_name" do
+          result = described_class.new(Test, [MarkdownRubyDocumentation::InstanceMethod.new("#sir_name", context: Test, file_path: __FILE__)]).to_hash
+          expect(convert_method_hash(result)).to eq({ sir_name: "This holds the user's sir name\n" })
+        end
       end
     end
 

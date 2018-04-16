@@ -68,7 +68,7 @@ module MarkdownRubyDocumentation
 
       def get_line_number(file, word)
         return unless file && word
-        `grep -nr -m 1 "^[\s]*#{word}" #{file}`.match(/#{file}:(\d*)/).to_a[1].try!(:to_i)
+        `grep -nrH -m 1 "^[\s]*#{word}" #{file}`.match(/#{file}:(\d*)/).to_a[1].try!(:to_i)
       end
 
       def look_for_class_macro_comment(method)

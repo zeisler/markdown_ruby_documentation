@@ -34,7 +34,7 @@ module MarkdownRubyDocumentation
     end
 
     def ancestors
-      subject.ancestors.select do |klass|
+      subject.ancestors.select do |klass| 
         klass.is_a?(Class) && ![BasicObject, Object, subject].include?(klass)
       end.sort_by(&:name)
     end
