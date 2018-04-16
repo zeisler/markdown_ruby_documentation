@@ -8,26 +8,26 @@ RSpec.describe MarkdownRubyDocumentation::MarkdownPresenter do
                                  items:     {
                                    method2: {
                                      text:          "{:key=>\"fun\"}",
-                                     method_object: MarkdownRubyDocumentation::InstanceMethod.new("")
+                                     method_object: MarkdownRubyDocumentation::InstanceMethod.new("", file_path: __FILE__, line_no: 3)
                                    },
                                    method4: {
                                      text:          "```ruby\n[1,\n 2,\n 3,\n 0]\n```",
-                                     method_object: MarkdownRubyDocumentation::NullMethod.new("")
+                                     method_object: MarkdownRubyDocumentation::NullMethod.new("", file_path: __FILE__, line_no: 1)
                                    },
                                    method3: {
                                      text:          "Im method 5",
-                                     method_object: MarkdownRubyDocumentation::InstanceMethod.new("")
+                                     method_object: MarkdownRubyDocumentation::InstanceMethod.new("", file_path: __FILE__, line_no: 2)
                                    },
                                  }).call
     expect(result).to eq <<~TEXT
       # My Model Name
       My Summary
 
-      ## Method2
-      {:key=>"fun"}
-
       ## Method3
       Im method 5
+
+      ## Method2
+      {:key=>"fun"}
 
       ## Reference Values
       ### Method4
@@ -47,11 +47,11 @@ RSpec.describe MarkdownRubyDocumentation::MarkdownPresenter do
                                  items:     {
                                    method2: {
                                      text:          "{:key=>\"fun\"}",
-                                     method_object: MarkdownRubyDocumentation::InstanceMethod.new("")
+                                     method_object: MarkdownRubyDocumentation::InstanceMethod.new("", file_path: __FILE__, line_no: 1)
                                    },
                                    method3: {
                                      text:          "Im method 5",
-                                     method_object: MarkdownRubyDocumentation::InstanceMethod.new("")
+                                     method_object: MarkdownRubyDocumentation::InstanceMethod.new("", file_path: __FILE__, line_no: 2)
                                    },
                                    class_level_comment: {
                                      text: "This is class level!"

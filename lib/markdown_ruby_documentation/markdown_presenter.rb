@@ -40,28 +40,34 @@ module MarkdownRubyDocumentation
     end
 
     def instances_methods
-      @instance_methods ||= item_types.delete("MarkdownRubyDocumentation::InstanceMethod")  || {}
-      @instance_methods.map do |name, hash|
-        %[## #{name.to_s.titleize}\n#{hash[:text]}] unless hash[:text].blank?
-      end.join("\n\n")
+      @instance_methods ||= method_presenters("MarkdownRubyDocumentation::InstanceMethod")
     end
 
     def class_methods
-      @class_methods ||= item_types.delete("MarkdownRubyDocumentation::ClassMethod")  || {}
-      @class_methods.map do |name, hash|
-        %[## #{name.to_s.titleize}\n#{hash[:text]}] unless hash[:text].blank?
-      end.join("\n\n")
+      @class_methods ||= method_presenters("MarkdownRubyDocumentation::ClassMethod")
     end
 
     def null_methods
-      @null_methods ||= item_types.delete("MarkdownRubyDocumentation::NullMethod") || {}
-      md = @null_methods.map do |name, hash|
-        %[### #{name.to_s.titleize}\n#{hash[:text]}] unless hash[:text].blank?
+      @null_methods ||= begin
+        md = method_presenters("MarkdownRubyDocumentation::NullMethod", "###")
+        if md.blank?
+          ""
+        else
+          "\n## Reference Values\n" << md
+        end
+      end
+    end
+
+    def method_presenters(type, heading="##")
+      type_methods = item_types.delete(type) || []
+      order_by_location(type_methods).map do |(name, hash)|
+        %[#{heading} #{name.to_s.titleize}\n#{hash[:text]}] unless hash[:text].blank?
       end.join("\n\n")
-      if md.blank?
-        ""
-      else
-        "\n## Reference Values\n" << md
+    end
+
+    def order_by_location(items)
+      items.sort_by do |(_, hash)|
+        hash[:method_object].source_location
       end
     end
 
