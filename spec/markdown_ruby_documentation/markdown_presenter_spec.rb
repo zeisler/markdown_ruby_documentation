@@ -12,7 +12,7 @@ RSpec.describe MarkdownRubyDocumentation::MarkdownPresenter do
                                    },
                                    method4: {
                                      text:          "```ruby\n[1,\n 2,\n 3,\n 0]\n```",
-                                     method_object: MarkdownRubyDocumentation::NullMethod.new("", file_path: __FILE__, line_no: 1)
+                                     method_object: MarkdownRubyDocumentation::NullMethod.new("")
                                    },
                                    method3: {
                                      text:          "Im method 5",

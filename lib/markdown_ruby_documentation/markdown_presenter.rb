@@ -66,8 +66,8 @@ module MarkdownRubyDocumentation
     end
 
     def order_by_location(items)
-      items.sort_by do |(_, hash)|
-        hash[:method_object].source_location
+      items.sort_by do |(name, hash)|
+        hash[:method_object].source_location rescue name # NullMethod has no source_location
       end
     end
 
