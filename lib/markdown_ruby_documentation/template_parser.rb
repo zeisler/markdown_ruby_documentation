@@ -50,40 +50,39 @@ module MarkdownRubyDocumentation
       @parser ||= methods.each_with_object({}) do |method, hash|
         begin
           @current_method = method
-          value           = parse_erb(insert_method_name(strip_comment_hash(extract_dsl_comment_from_method(method)), method), method)
-        rescue MethodSource::SourceNotFoundError => e
+          value           = compile_comment(method)
+        rescue MethodSource::SourceNotFoundError
           @current_method = nil
           value           = false
         end
-        if value
-          hash[method.name] = { text: value, method_object: method }
-        end
+        hash[method.name] = { text: value, method_object: method } if value
       end
     end
 
     module CommentMacros
       include Parsing
       attr_accessor :output_object
-      # @param [String] str
+      # @param [String] method_reference
       # @example
       # @return [String] of any comments proceeding a method def
-      def print_raw_comment(str)
-        strip_comment_hash(ruby_class_meth_comment(Method.create(str, context: ruby_class)))
+      def print_raw_comment(method_reference)
+        strip_comment_hash(ruby_class_meth_comment(Method.create(method_reference, context: ruby_class)))
       end
 
-      # @param [String] str
+      # @param [String] method_reference
       # @example
       # @return [String]
-      def print_mark_doc_from(str)
-        method = Method.create(str, context: ruby_class)
-        parse_erb(insert_method_name(extract_dsl_comment(print_raw_comment(str)), method), method)
+      def print_mark_doc_from(method_reference)
+        method  = Method.create(method_reference, context: ruby_class)
+        comment = extract_dsl_comment(print_raw_comment(method_reference))
+        compile_comment(method, comment)
       end
 
-      # @param [String] str
+      # @param [String] method_reference
       # @example
       # @return [Object] anything that the evaluated method would return.
-      def eval_method(str=current_method)
-        case (method = Method.create(str, context: ruby_class))
+      def eval_method(method_reference=current_method)
+        case (method = Method.create(method_reference, context: ruby_class))
         when ClassMethod
           method.context.public_send(method.name)
         when InstanceMethod
@@ -525,6 +524,10 @@ module MarkdownRubyDocumentation
                         end
         end
         source_code
+      end
+
+      def compile_comment(method, comment = extract_dsl_comment_from_method(method))
+        parse_erb(insert_method_name(strip_comment_hash(comment), method), method)
       end
     end
 

@@ -4,30 +4,30 @@ module MarkdownRubyDocumentation
       def parse_erb(str, method)
         filename, lineno = ruby_class_meth_source_location(method)
         adjusted_lineno  = (lineno - ruby_class_meth_comment(method).split("\n").count-1)
-        ruby_class.module_eval(<<-RUBY, __FILE__, __LINE__+1)
+        method.context.module_eval(<<-RUBY, __FILE__, __LINE__+1)
         def self.get_binding
           self.send(:binding)
         end
         RUBY
-        ruby_class.send(:define_singleton_method, :current_method) do
+        method.context.send(:define_singleton_method, :current_method) do
           method
         end
 
-        ruby_class.send(:define_singleton_method, :output_object) do
+        method.context.send(:define_singleton_method, :output_object) do
           output_object
         end
 
-        ruby_class.send(:define_singleton_method, :load_path) do
+        method.context.send(:define_singleton_method, :load_path) do
           load_path
         end
 
-        ruby_class.extend(CommentMacros)
+        method.context.extend(CommentMacros)
 
         erb          = ERB.new(str, nil, "-")
 
         erb.lineno   = adjusted_lineno if erb.respond_to?(:lineno)
         erb.filename = filename if erb.respond_to?(:filename)
-        erb.result(ruby_class.get_binding)
+        erb.result(method.context.get_binding)
       rescue => e
         raise e.class, e.message, ["#{filename}:#{adjusted_lineno}:in `#{method.name}'", *e.backtrace]
       end

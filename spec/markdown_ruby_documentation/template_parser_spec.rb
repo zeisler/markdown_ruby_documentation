@@ -193,8 +193,9 @@ RSpec.describe MarkdownRubyDocumentation::TemplateParser do
         end
 
         class Test2
+          GREETING = "Goodbye"
           #=mark_doc
-          # Goodbye
+          # <%= GREETING %>
           #=mark_end
           def method5
           end
